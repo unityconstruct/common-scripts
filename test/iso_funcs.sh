@@ -3,6 +3,62 @@
 # ISO FUNCS
 #-----------------------------------------------------------------------
 
+
+
+## use absolute path
+ #
+_process_iso_mkiso_absolute_path() {
+	local __fullpath="${1}"	    # single 
+	local __isofile="${2}"		    # output filename base WITHOUT .iso extension
+	local __volname="${3:0:31}"		# truncate at 31 chars for juliet
+	local __destdir="${6}"
+    
+	local __isoname="${__fname}.iso"
+    _log "CREATING ISO IMAGE: VOLUME:[${__volname}] -- FOLDER:[${__fullpath}] -- ISO FILENAME:[${__destdir}/${__isofile}]" | tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
+    mkisofs -lJR -pad -input-charset "utf-8" -V "${__volname}" -o "${__destdir}/${__isofile}" "${__fullpath}/"
+    # save error code from command
+	status=$?;
+   	# if rip fails, rename iso then try to tar it
+    if [ ${status} -ne 0 ] ; then
+        _log "[#$_counter]FAILED!! STATUS:[${status}] :: CREATING ISO IMAGE: VOLUMNE:[${__volname}] -- FOLDER:[${__fullpath}] -- ISO FILENAME:[${__destdir}/${__isofile}]"
+    else
+        _log "[#$_counter]SUCCESS: STATUS:[${status}] :: CREATING ISO IMAGE: VOLUMNE:[${__volname}] -- FOLDER:[${__fullpath}] -- ISO FILENAME:[${__destdir}/${__isofile}]"
+    fi
+
+}
+
+## Process a SINGLE FOLDER to ISO with Joliet directory records in addition to regular iso9660 file names
+ # -l full 31 char filenames
+ # -J juliet + iso9660 file names
+ # -R Generate System Use Sharing Protocol (SUSP) + Rock Ridge (RR) records using RR protocol
+ # -joliet-long = 103 unicode chars
+ #
+_process_iso_mkiso() {
+    local __src_base_dir="${1}"
+	local __src_folder="${2}"	    # single 
+	local __volname="${3:0:31}"		# truncate at 31 chars for juliet
+	local __fname="${4}"		#get_fname
+	local __dest_base_folder="${5}"
+    
+	local __isoname="${__fname}.iso"
+    echo "CREATING ISO IMAGE: VOLUME:[${__volname}] -- FOLDER:[${__src_base_dir}/${__src_folder}] -- ISO FILENAME:[${__dest_base_folder}/${__isoname}]" | tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
+    mkisofs -lJR -pad -input-charset "utf-8" -V "${__volname}" -o "${__dest_base_folder}/${__isoname}" "${__src_base_dir}/${__src_folder}/"
+    # save error code from command
+	status=$?;
+   	# if rip fails, rename iso then try to tar it
+    if [ ${status} -ne 0 ] ; then
+        echo "[#$_counter]FAILED!! STATUS:[${status}] :: CREATING ISO IMAGE: VOLUMNE:[${__volname}] -- FOLDER:[${__src_base_dir}/${__src_folder}] -- ISO FILENAME:[${__dest_base_folder}/${__isoname}]" \
+        | tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
+    else
+        echo "[#$_counter]SUCCESS: STATUS:[${status}] :: CREATING ISO IMAGE: VOLUMNE:[${__volname}] -- FOLDER:[${__src_base_dir}/${__src_folder}] -- ISO FILENAME:[${__dest_base_folder}/${__isoname}]" \
+        | tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
+    fi
+
+}
+
+
+
+
 ## prompt for single image to test
  #
 _process_testiso_prompt_single () {

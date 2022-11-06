@@ -89,6 +89,17 @@ declare -A _disotest=(["list"]="isolist.txt"
   ["mountpoint"]="/media/isomount"
 )
 
+declare -A _dmkiso=(["list"]="isolist.txt"
+  ["func"]="_process_dir2iso"
+  ["line"]="null"
+  ["srcdir"]="/media/media3/s/000"
+  ["destdir"]="/media/media3/s/000"
+  ["out_file"]=" "
+  ["src_folder"]=" "
+  ["volume"]=" "
+  ["mountpoint"]="/media/isomount"
+)
+
 
 #---------------------------------------------------------------------
 # MAIN INIT FUNCTION
@@ -114,7 +125,7 @@ menu () {
     MOUNTPOINT:      [${ISO_MOUNTPOINT}]
     [S]- Update the SRCDIR holding the sample folders
     [D]- Update the DSTDIR to create iso in
-    [F]- Update the LIST path
+    [L]- Update the LIST name [list.txt]
     ------------------------------------------------                                        
     [1]- Read in & Process SINGLE Folder to ISO
     [2]- Test SINGLE ISO Image
@@ -141,12 +152,15 @@ menu () {
   "2") echo "Testing SINGLE ISO Image"
     _process_testiso_prompt_single
     ;;
-	# "3")echo "Create samplefolders.txt"
-	# 	create_folder_list "${SRCDIR}" "${FOLDER_LIST}"
-	# 	;;
-	# "4")echo "Read & Process samplefolders.txt"
-	# 	loop_ISO_LIST_create_iso "${SRCDIR}" "${FOLDER_LIST}" "${DSTDIR}"
-	# 	;;
+	"3") echo "Create list of folders [ie: list.txt]"
+		_create_folder_list "${SRCDIR}" "${LIST}"
+		;;
+	"4") echo "dir2iso"
+    _dmkiso["list"]="${LIST}"
+    _loop_list_do _dmkiso
+    #_dmkiso
+		# loop_ISO_LIST_create_iso "${SRCDIR}" "${FOLDER_LIST}" "${DSTDIR}"
+		;;
 	# "5") echo "Edit samplefolders.txt"
 	# 	nano "${SRCDIR}"/"${FOLDER_LIST}"
 	# 	;;
@@ -159,7 +173,7 @@ menu () {
     DSTDIR="${__DATA}"
     ;;
   "L") echo "Update List Path"
-    _get_user_resp "Enter LIST path ( /var/tmp/list.txt ): "
+    _get_user_resp "Enter LIST filename [list.txt]: "
     LIST="${__DATA}"
     ;;
   # "w") echo wget filename
@@ -218,7 +232,9 @@ _loop_list_do() {
      if [ "${_flag_is_comment}" = "false" -a "${_flag_is_empty}" = "false" ]; then
        ((++_c))
        _log "[#$_c]loopdo   :[${_line}]"
-       ${_a["func"]}        ## call custom method
+                                                #  ${_a["func"]}        ## call custom method
+       _a["line"]="${_line}"    ## assign the line to the array
+       ${_a["func"]} _a             ## call custom method and pass array to it [ ie: _a["func"](_a) ]
      else
        _log "loopskip :[${_line}]"
      fi
@@ -250,6 +266,31 @@ _loop_list_do_ext() {
 #---------------------------------------------------------------------
 # Processors
 #---------------------------------------------------------------------
+
+  # _process_iso_mkiso "${_ddir2iso["srcdir"]}" "${_ddir2iso["foldername"]}" "${_ddir2iso["volume"]}" "${_ddir2iso["filename"]}" "${_ddir2iso["destdir"]}"
+
+## process a folder => iso image
+ # 
+ #
+_process_dir2iso(){ 
+  local -n _z=$1
+  mkisofs -lJR -pad -input-charset "utf-8" -V "${_z["line"]:0:31}" -o "${DSTDIR}/${_z["line"]}.iso" "${SRCDIR}/${_z["line"]}"
+
+# local __isoname="${__fname}.iso"
+  # __volname="${3:0:31}"
+  # _z["volume"]="${_z["line"]}"
+
+  # _process_iso_mkiso "${_z["srcdir"]}" "${_z["src_folder"]}" "${_z["volume"]}" "${_z["out_file"]}" "${_z["destdir"]}"
+#   _process_iso_mkiso_absolute_path
+
+  # __src_base_dir="${1}" 
+  # __src_folder="${2}"	    # single 
+	# __volname="${3:0:31}"		# truncate at 31 chars for juliet
+	# __fname="${4}"		#get_fname
+	# __dest_base_folder="${5}"
+
+  #process_with_lJR
+}
 
 # convert NRG to ISO
  # requires package: sudo apt-get install nrg2iso
