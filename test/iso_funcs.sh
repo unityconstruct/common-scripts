@@ -3,8 +3,6 @@
 # ISO FUNCS
 #-----------------------------------------------------------------------
 
-
-
 ## use absolute path
  #
 _process_iso_mkiso_absolute_path() {
@@ -55,9 +53,6 @@ _process_iso_mkiso() {
     fi
 
 }
-
-
-
 
 ## prompt for single image to test
  #
