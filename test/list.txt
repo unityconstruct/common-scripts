@@ -1,7 +1,0 @@
-# comment
-USB Soundscan vol.34 - Burning Grunge Hip Hop.nrg
-https://something.com
-/var/tmp/dir
-/var/tmp/dir/asset.txt
-
-# comment
