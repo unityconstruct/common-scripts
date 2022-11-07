@@ -1,11 +1,11 @@
-#!/bin/bash
+11#!/bin/bash
 source $(dirname "$0")/collector.sh
 _LOG=test.log
 
 # GLOBAL VARS ---------------------------------------------------------
-SRCDIR=
-DSTDIR=
-LIST=
+SRCDIR=/tmp/tar
+DSTDIR=/tmp/tar
+LIST=tarlist.txt
 ## WGET-ONLY
 # SRCDIR="/home/uc/Downloads/wget/imgs" #"/home/uc/mm3/s/000"
 # DSTDIR="/home/uc/Downloads/wget/imgsnum" #"/home/uc/mm3/s/000"
@@ -65,6 +65,33 @@ declare -A _dmkiso=(["list"]="isolist.txt"
   ["mountpoint"]="/media/isomount"
 )
 
+declare -A _dtarx=(["list"]="tarlist.txt"
+  ["func"]="_process_tar_extract"
+  ["line"]="null"
+  ["filename"]="null"
+  ["ext"]="tar"
+  ["srcdir"]="/tmp/tar"
+  ["destdir"]="/tmp/tar"
+  ["out_file"]=""
+  ["src_folder"]=" "
+)
+
+declare -A _dtarc=(["list"]="tarlist.txt"
+  ["func"]="_process_tar_create"
+  ["line"]="null"
+  ["filename"]="null"
+  ["srcdir"]="/tmp"
+  ["destdir"]="/tmp"
+  ["out_file"]=""
+
+)
+
+
+
+_process_tar_extract
+
+
+
 #---------------------------------------------------------------------
 # MAIN INIT FUNCTION
 #---------------------------------------------------------------------
@@ -87,20 +114,22 @@ _menu_show() {
  DSTDIR:          [${DSTDIR}]
  LIST:            [${LIST}]
  MOUNTPOINT:      [${ISO_MOUNTPOINT}]
- [S]- Update the SRCDIR holding the sample folders
- [D]- Update the DSTDIR to create iso in
- [L]- Update the LIST name [list.txt]
+ [S] Update the SRCDIR holding the sample folders
+ [D] Update the DSTDIR to create iso in
+ [L] Update the LIST name [list.txt]
  ------------------------------------------------                                        
- [1]- Read in & Process SINGLE Folder to ISO
- [2]- Test SINGLE ISO Image
- [3]- Create File List [${SRCDIR}/${FOLDER_LIST}]
- [4]- Read & Process   [${SRCDIR}/${FOLDER_LIST}]
- [5]- Edit             [${SRCDIR}/${FOLDER_LIST}]
+ [1] Read in & Process SINGLE Folder to ISO
+ [2] Test SINGLE ISO Image
+ [3] Create File List [${SRCDIR}/${FOLDER_LIST}]
+ [4] Read & Process   [${SRCDIR}/${FOLDER_LIST}]
+ [5] Edit             [${SRCDIR}/${FOLDER_LIST}]
  ------------------------------------------------
- [N]- Convert NRG images to ISO using [${SRCDIR}/${NRG_LIST}]
- [T]- Test ISO images in [${DSTDIR}] using [${DSTDIR}/${ISO_LIST}]
- [W]- enumerate files/urls
- [Z]- unZIP to FOLDER using [${SRCDIR}/${ZIP_LIST}]
+ [11] tar extract from list
+ [12] tar create from list
+ [N] Convert NRG images to ISO using [${SRCDIR}/${NRG_LIST}]
+ [T] Test ISO images in [${DSTDIR}] using [${DSTDIR}/${ISO_LIST}]
+ [W] enumerate files/urls
+ [Z] unZIP to FOLDER using [${SRCDIR}/${ZIP_LIST}]
  ------------------------------------------------
  [0][x]-exit 0 
  [*]-Prompt again"
@@ -124,7 +153,7 @@ _menu () {
   "D") echo "Update Dest BaseDir"; _get_user_resp "Enter NEW DST BASEDIR ( Current:[${DSTDIR}] ): "; DSTDIR="${__DATA}" ;;
   "L") echo "Update List Path"; _get_user_resp "Enter LIST filename [list.txt]: " ; LIST="${__DATA}" ;;
   # "w") echo wget filename; _loop_WGET_LIST_copy_enumeration  "${SRCDIR}" "${WGET_LIST}" "${DSTDIR}" ;;
-  "T") echo "Testing ISO images"; create_file_list_by_ext "${DSTDIR}" "${_disotest["list"]}" "${_disotest["ext"]}"; _loop_list_do_ext _disotest ;;
+  "T") echo "Testing ISO images"; _create_file_list_by_ext "${DSTDIR}" "${_disotest["list"]}" "${_disotest["ext"]}"; _loop_list_do_ext _disotest ;;
   # "Z") echo "unZIP to FOLDER"
    #     create_file_list_by_ext "${SRCDIR}" $"{ZIP_LIST}" "zip"
    #     loop_src_zipfile_list_unzip "${SRCDIR}" "${ZIP_LIST}" "${DSTDIR}"
@@ -133,11 +162,16 @@ _menu () {
    #     create_file_list_by_ext "${SRCDIR}" $"{ZIP_LIST}" "rar"
    #     loop_src_zipfile_list_unzip "${SRCDIR}" "${RAR_LIST}" "${DSTDIR}"
    #     ;;
-	"0") echo "exiting..."; exit 0;;
+	"11") echo "tar extract"; _create_file_list_by_ext "${DSTDIR}" "${_dtarx["list"]}" "${_dtarx["ext"]}"; _loop_list_do_ext _dtarx ;;
+	"12") echo "tar create";  _create_folder_list "${SRCDIR}" "${_dtarc["list"]}" ; _loop_list_do _dtarc ;;
+  
+
+  
+  "0") echo "exiting..."; exit 0;;
 	"x") echo "exiting..."; exit 0;;
-	*) echo "Invalid Option selected, Retrying"; menu ;; 
+	*) echo "Invalid Option selected, Retrying"; _menu ;; 
 	esac
-	menu	# show the menu again
+	_menu	# show the menu again
 }
 
 #---------------------------------------------------------------------
@@ -187,8 +221,16 @@ _loop_list_do_ext() {
 #---------------------------------------------------------------------
 # Processors
 #---------------------------------------------------------------------
+## create iso image - prompt for values
+ #
+_process_dir2iso_promptfor() {
+  _get_user_resp "Enter source dir [/var/tmp/datadisc]   : " ; local _srcdir="${__DATA}"
+  _get_user_resp "Enter output image [/var/tmp/image.iso]: " ; local _isoname="${__DATA}"
+  _get_user_resp "Enter volume name [datadisc04]         : " ; local _volname="${__DATA}"
+  mkisofs -lJR -pad -input-charset "utf-8" -V "${_volname:0:31}" -o "${_isoname}" "${_srcdir}"
+}
 
-## process a folder => iso image
+## create iso image - use array of values
  # _process_iso_mkiso "${_ddir2iso["srcdir"]}" "${_ddir2iso["foldername"]}" "${_ddir2iso["volume"]}" "${_ddir2iso["filename"]}" "${_ddir2iso["destdir"]}"
  #
 _process_dir2iso(){ 
@@ -196,7 +238,7 @@ _process_dir2iso(){
   mkisofs -lJR -pad -input-charset "utf-8" -V "${_z["line"]:0:31}" -o "${DSTDIR}/${_z["line"]}.iso" "${SRCDIR}/${_z["line"]}"
 }
 
-# convert NRG to ISO
+# convert NRG to ISO - use array of values
  # requires package: sudo apt-get install nrg2iso
  # _convert_nrg_2_iso "${__src_base_dir}" "${_nrgfile}" "${__dest_base_dir}"
 _process_nrg2iso () {
@@ -205,17 +247,35 @@ _process_nrg2iso () {
   nrg2iso "${_nrg["srcdir"]}/${_nrg["filename"]}" "${_nrg["destdir"]}/${_nrg["filename"]:0:${#_nrg["filename"]}-4}.iso"
 }
 
-# Process a SINGLE ZIPFILE
- #
-_process_unzip() {
-  local -n _d=$1
+# create zip file from folder - use array of values
   # local __src_base_dir="${1}"
 	# local __src_zipfile="${2}"	    # single 
 	# local __dest_base_folder="${3}"
   # unzip "${__src_base_dir}/${__src_zipfile}" -d "${__dest_base_folder}/"  | tee -a "${SRCDIR}/${ZIP_LOG}"
-    unzip "${_d["srcdir"]}/${_d["filename"]}" -d "${_d["destdir"]}/"  | tee -a "${_LOG}"
+ #
+_process_unzip() {
+  local -n _d=$1
+  unzip "${_d["srcdir"]}/${_d["filename"]}" -d "${_d["destdir"]}/"  #| tee -a "${_LOG}"
 }
 
+_process_tar_extract() {
+  local -n _d=$1;
+
+  _tar_extract_to_dest "${SRCDIR}/${_d["filename"]}" "${DSTDIR}"
+}
+
+## create tar from folder
+ #
+  #  tar cvf -o "${__destdir}/${__tarfile}" "${__srcdir}"
+  # _tar_create_from_dest srcdir tarfile destdir
+_process_tar_create() {
+    local -n _d=$1;
+    echo "_tar_create_from_dest ${DSTDIR} ${_d["line"]}.tar ${SRCDIR}/${_d["line"]}" 
+   _tar_create_from_dest "${SRCDIR}" "${DSTDIR}" "${_d["line"]}.tar"  "${_d["line"]}"  
+}
+
+## test iso image - - use array of values
+ #
 _process_isotest() {
   local -n _d=$1
   _process_testiso_mountimg "${_d["srcdir"]}/" "${_d["filename"]}" "${_d["mountpoint"]}" 

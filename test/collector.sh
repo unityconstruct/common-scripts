@@ -8,6 +8,7 @@ source $(dirname "$0")/log_funcs.sh
 source $(dirname "$0")/prompt_funcs.sh
 source $(dirname "$0")/string_funcs.sh
 source $(dirname "$0")/test_funcs.sh
+source $(dirname "$0")/zip_funcs.sh
 #source $(dirname "$0")/log_funcs.sh
 # source props.sh
 # source array_funcs.sh
