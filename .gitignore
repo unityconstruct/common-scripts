@@ -1,1 +1,4 @@
-test/tmp/*.iso
+test/temp/
+test/temp/*
+*/test/temp/*
+test/tmp/folder1.iso
