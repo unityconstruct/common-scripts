@@ -2,9 +2,7 @@
 source $(dirname "$0")/collector.sh
 _LOG=test.log
 
-#---------------------------------------------------------------------
-# GLOBAL VARS
-#---------------------------------------------------------------------
+# GLOBAL VARS ---------------------------------------------------------
 SRCDIR=
 DSTDIR=
 LIST=
@@ -67,100 +65,80 @@ declare -A _dmkiso=(["list"]="isolist.txt"
   ["mountpoint"]="/media/isomount"
 )
 
-
 #---------------------------------------------------------------------
 # MAIN INIT FUNCTION
 #---------------------------------------------------------------------
+
+## main controller func - calls _menu
  #
-runme () {
-	menu
+_runme () {
+	_menu
 }
 
-#---------------------------------------------------------------------
-# MAIN MENU
-#---------------------------------------------------------------------
+# MAIN MENU --------------------------------------------------------------------
+
+## Menu Text
  #
-menu () {
-    #clear
-	echo "
-    -------------------------------------------- 
-    -- list-iterator [LOG: ${_LOG}] --
-    -------------------------------------------- 
-    SRCDIR:          [${SRCDIR}]
-    DSTDIR:          [${DSTDIR}]
-    LIST:            [${LIST}]
-    MOUNTPOINT:      [${ISO_MOUNTPOINT}]
-    [S]- Update the SRCDIR holding the sample folders
-    [D]- Update the DSTDIR to create iso in
-    [L]- Update the LIST name [list.txt]
-    ------------------------------------------------                                        
-    [1]- Read in & Process SINGLE Folder to ISO
-    [2]- Test SINGLE ISO Image
-    [3]- Create File List [${SRCDIR}/${FOLDER_LIST}]
-    [4]- Read & Process   [${SRCDIR}/${FOLDER_LIST}]
-    [5]- Edit             [${SRCDIR}/${FOLDER_LIST}]
-    ------------------------------------------------
-    [N]- Convert NRG images to ISO using [${SRCDIR}/${NRG_LIST}]
-    [T]- Test ISO images in [${DSTDIR}] using [${DSTDIR}/${ISO_LIST}]
-    [W]- enumerate files/urls
-    [Z]- unZIP to FOLDER using [${SRCDIR}/${ZIP_LIST}]
-    ------------------------------------------------
-    [0][x]-exit 0 
-    [*]-Prompt again"
+_menu_show() {
+ echo " -------------------------------------------- 
+ -- list-iterator [LOG: ${_LOG}] --
+ -------------------------------------------- 
+ SRCDIR:          [${SRCDIR}]
+ DSTDIR:          [${DSTDIR}]
+ LIST:            [${LIST}]
+ MOUNTPOINT:      [${ISO_MOUNTPOINT}]
+ [S]- Update the SRCDIR holding the sample folders
+ [D]- Update the DSTDIR to create iso in
+ [L]- Update the LIST name [list.txt]
+ ------------------------------------------------                                        
+ [1]- Read in & Process SINGLE Folder to ISO
+ [2]- Test SINGLE ISO Image
+ [3]- Create File List [${SRCDIR}/${FOLDER_LIST}]
+ [4]- Read & Process   [${SRCDIR}/${FOLDER_LIST}]
+ [5]- Edit             [${SRCDIR}/${FOLDER_LIST}]
+ ------------------------------------------------
+ [N]- Convert NRG images to ISO using [${SRCDIR}/${NRG_LIST}]
+ [T]- Test ISO images in [${DSTDIR}] using [${DSTDIR}/${ISO_LIST}]
+ [W]- enumerate files/urls
+ [Z]- unZIP to FOLDER using [${SRCDIR}/${ZIP_LIST}]
+ ------------------------------------------------
+ [0][x]-exit 0 
+ [*]-Prompt again"
+}
+
+## Menu Logic
+ #
+_menu () {
+  _menu_show
 	echo "------------------------------------------------"
 	read -p "enter option: " opt
 	echo "------------------------------------------------"
 	echo "Typed: $opt"
-
 	case "$opt" in
-	# "1")echo "Processing Single Folder to ISO"
-  #       process_single_folder 
-  #       ;;
+	# "1") echo "Processing Single Folder to ISO"; process_single_folder ;;
   "2") echo "Testing SINGLE ISO Image"; _process_testiso_prompt_single ;;
 	"3") echo "Create list of folders [ie: list.txt]"; _create_folder_list "${SRCDIR}" "${LIST}" ;;
 	"4") echo "dir2iso"; _dmkiso["list"]="${LIST}"; _loop_list_do _dmkiso ;;
-	# "5") echo "Edit samplefolders.txt"
-	# 	nano "${SRCDIR}"/"${FOLDER_LIST}"
-	# 	;;
+	# "5") echo "Edit samplefolders.txt"; nano "${SRCDIR}"/"${FOLDER_LIST}";;
 	"S") echo "Update Src BaseDir"; _get_user_resp "Enter NEW SRC BASEDIR ( Current:[${SRCDIR}] ): "; SRCDIR="${__DATA}" ;;
   "D") echo "Update Dest BaseDir"; _get_user_resp "Enter NEW DST BASEDIR ( Current:[${DSTDIR}] ): "; DSTDIR="${__DATA}" ;;
   "L") echo "Update List Path"; _get_user_resp "Enter LIST filename [list.txt]: " ; LIST="${__DATA}" ;;
-  # "w") echo wget filename
-  #     _loop_WGET_LIST_copy_enumeration  "${SRCDIR}" "${WGET_LIST}" "${DSTDIR}" 
-  #     ;;
+  # "w") echo wget filename; _loop_WGET_LIST_copy_enumeration  "${SRCDIR}" "${WGET_LIST}" "${DSTDIR}" ;;
   "T") echo "Testing ISO images"; create_file_list_by_ext "${DSTDIR}" "${_disotest["list"]}" "${_disotest["ext"]}"; _loop_list_do_ext _disotest ;;
-      # echo "$(getTimestamp)" > "${DSTDIR}/${ISO_MOUNT_LOG}"
-      # create_file_list_by_ext "${DSTDIR}" "${ISO_LIST}" "${_disotest["ext"]}"
-      # loop_isofile_list_mount_umount "${DSTDIR}" "${ISO_LIST}" "${ISO_MOUNTPOINT}"
-      
-      # loop_isofile_list_mount_umount "${DSTDIR}" "${_disotest["list"]}" "${_disotest["mountpoint"]}"
-  #     create_file_list_by_ext "${SRCDIR}" $"{NRG_LIST}" "nrg"
-  #     _iterate_nrgfile_list_convert_nrg2iso "${SRCDIR}" "${DSTDIR}" "${NRG_LIST}"
-  #     ;;
   # "Z") echo "unZIP to FOLDER"
-  #     create_file_list_by_ext "${SRCDIR}" $"{ZIP_LIST}" "zip"
-  #     loop_src_zipfile_list_unzip "${SRCDIR}" "${ZIP_LIST}" "${DSTDIR}"
-  #     ;;
+   #     create_file_list_by_ext "${SRCDIR}" $"{ZIP_LIST}" "zip"
+   #     loop_src_zipfile_list_unzip "${SRCDIR}" "${ZIP_LIST}" "${DSTDIR}"
+   #     ;;
   # "R") echo "unRAR to FOLDER"
-  #     create_file_list_by_ext "${SRCDIR}" $"{ZIP_LIST}" "rar"
-  #     loop_src_zipfile_list_unzip "${SRCDIR}" "${RAR_LIST}" "${DSTDIR}"
-  #     ;;
-	"0") echo "exiting..."
-	    exit 0;;
-	"x") echo "exiting..."
-	    exit 0;;
-	*) echo "Invalid Option selected, Retrying"
-        menu
-        ;; 
+   #     create_file_list_by_ext "${SRCDIR}" $"{ZIP_LIST}" "rar"
+   #     loop_src_zipfile_list_unzip "${SRCDIR}" "${RAR_LIST}" "${DSTDIR}"
+   #     ;;
+	"0") echo "exiting..."; exit 0;;
+	"x") echo "exiting..."; exit 0;;
+	*) echo "Invalid Option selected, Retrying"; menu ;; 
 	esac
 	menu	# show the menu again
 }
-
-
-#---------------------------------------------------------------------
-# LIST Funcs
-#---------------------------------------------------------------------
-
 
 #---------------------------------------------------------------------
 # Read Loops
@@ -210,10 +188,8 @@ _loop_list_do_ext() {
 # Processors
 #---------------------------------------------------------------------
 
-  # _process_iso_mkiso "${_ddir2iso["srcdir"]}" "${_ddir2iso["foldername"]}" "${_ddir2iso["volume"]}" "${_ddir2iso["filename"]}" "${_ddir2iso["destdir"]}"
-
 ## process a folder => iso image
- # 
+ # _process_iso_mkiso "${_ddir2iso["srcdir"]}" "${_ddir2iso["foldername"]}" "${_ddir2iso["volume"]}" "${_ddir2iso["filename"]}" "${_ddir2iso["destdir"]}"
  #
 _process_dir2iso(){ 
   local -n _z=$1
@@ -247,28 +223,23 @@ _process_isotest() {
 }
 
 
-
-
-
-
-runme
-# ${_disotest["func"]} _disotest
-# ${_dunzip["func"]} _dunzip
-# _loop_list_do_ext _disotest
-
-
-
+# RUNNER --------------------------------------------------------------------
+_runme
 
 # --------------------------------------------------------------------
 # Test code
 # --------------------------------------------------------------------
-# ${_dngriso["func"]} _dngriso
-# _loop_list_do _data
-# _loop_list_do_ext _dngriso
-# _log "test message"
-# _p_string "STRING1"
-# _p_array  _data
-# _p_string_array "STRING1" _data
-# _p_string_array_string "STRING1" _data "STRING2"
-# _p_call_func_stored_in_array _data
-# _log "MESSAGE"
+ # ${_disotest["func"]} _disotest
+ # ${_dunzip["func"]} _dunzip
+ # _loop_list_do_ext _disotest
+ # ${_dngriso["func"]} _dngriso
+ # _loop_list_do _data
+ # _loop_list_do_ext _dngriso
+ # _log "test message"
+ # _p_string "STRING1"
+ # _p_array  _data
+ # _p_string_array "STRING1" _data
+ # _p_string_array_string "STRING1" _data "STRING2"
+ # _p_call_func_stored_in_array _data
+ # _log "MESSAGE"
+
