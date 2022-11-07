@@ -65,3 +65,44 @@ _trim_by () {
   echo ${_result}
 }
 
+
+#-----------------------------------------------------------------------
+# STRING PADDING FUNCS
+#-----------------------------------------------------------------------
+
+## pad single digit numbers with '0'
+ #
+_padnums () {
+ temp=$1 ;
+ length=$2 ;
+ padding="$(make_padding 1)" ;
+
+ if [ ${#temp} -eq 1 ] ; then
+  echo "${padding}${temp}" ;
+ else
+  echo "${temp}" ;
+ fi
+}
+
+## add padding of '0'
+ #
+_make_padding () {
+ length=$1 ;
+ pads="" ;
+ for (( c=1; c<=${length}; c++ )) ;
+ do
+  pads="${pads}0" ;
+  echo ${pads} ;
+ done
+}
+
+## pad a single char string
+ #
+_padnum () {
+ temp=$1
+ if [ ${#temp} -eq 1 ] ; then
+  echo "0${temp}" ;
+ else
+  echo "${temp}" ;
+ fi
+}

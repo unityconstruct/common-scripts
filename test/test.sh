@@ -126,14 +126,17 @@ declare -A _dunzip=(["func"]="_process_unzip"
  # SRCDIR="/home/uc/Downloads/wget/imgs" #"/home/uc/mm3/s/000"
  # DSTDIR="/home/uc/Downloads/wget/imgsnum" #"/home/uc/mm3/s/000"
  WGET_LIST="/home/uc/Downloads/wget/imgs/wglist.txt"
- WGET_LOG="wget_list.log"
- # declare -A _dwget=(["list"]="/home/uc/Downloads/wget/imgs/wglist.txt"
- #   ["func"]="_process_wgetimgs"
- #   ["ext"]="http"
- #   ["srcdir"]=""
- #   ["destdir"]="/media/media3/s/000"
- #   ["filename"]=""
- # )
+#  WGET_LOG="wget_list.log"
+ declare -A _dwgetenum=(["func"]="_loop_wget_dllist_copy_to_enumerated_fileset"
+   ["list"]="/home/uc/Downloads/wget/imgs/wglist.txt"
+   ["srcdir"]="/home/uc/Downloads/wget/imgs"
+   ["destdir"]="/home/uc/Downloads/wget/imgsnum"
+   ["ext"]="http"
+   ["filename"]="null"
+   ["line"]="null"
+ )
+
+
  ## WGET-ONLY -------------------------------------------------------------
 
 
@@ -191,18 +194,24 @@ _menu () {
 	echo "------------------------------------------------"
 	echo "Typed: $opt"
 	case "$opt" in
-	"1") echo "Processing Single Folder to ISO"; _process_testiso_prompt_single;; # _process_single_folder ;;
-  "2") echo "Testing SINGLE ISO Image"; _process_testiso_prompt_single ;;
-	"4") echo "dir2iso"            ; _create_folder_list "${SRCDIR}" "${LIST}"; _dmkiso["list"]="${LIST}"               ; _loop_list_do _dmkiso ;;
-	"S") echo "Update Src BaseDir" ; _get_user_resp "Enter NEW SRC BASEDIR ( Current:[${SRCDIR}] ): "; SRCDIR="${__DATA}" ;;
-  "D") echo "Update Dest BaseDir"; _get_user_resp "Enter NEW DST BASEDIR ( Current:[${DSTDIR}] ): "; DSTDIR="${__DATA}" ;;
-  "L") echo "Update List Path"   ; _get_user_resp "Enter LIST filename [list.txt]: "               ; LIST="${__DATA}"   ;;
-  "N") echo "NRG=>ISO"           ; _create_file_list_by_ext "${SRCDIR}" "${_dnrgiso["list"]}" "${_dnrgiso["ext"]}"    ; _loop_list_do_ext _dnrgiso ;;
-  "T") echo "Testing ISO images" ; _create_file_list_by_ext "${SRCDIR}" "${_disotest["list"]}" "${_disotest["ext"]}"  ; _loop_list_do_ext _disotest ;;
-  "Z") echo "unZIP to FOLDER"    ; _create_file_list_by_ext "${SRCDIR}" "${_dunzip["list"]}"   "${_dunzip["ext"]}"    ; _loop_list_do_ext _dunzip;;     ## "${SRCDIR}" "${ZIP_LIST}" "${DSTDIR}" ;;
+	"1")  echo "Processing Single Folder to ISO"; _process_testiso_prompt_single;; # _process_single_folder ;;
+  "2")  echo "Testing SINGLE ISO Image"; _process_testiso_prompt_single ;;
+	"4")  echo "dir2iso"            ; _create_folder_list "${SRCDIR}" "${LIST}"; _dmkiso["list"]="${LIST}"               ; _loop_list_do _dmkiso ;;
+	"S")  echo "Update Src BaseDir" ; _get_user_resp "Enter NEW SRC BASEDIR ( Current:[${SRCDIR}] ): "; SRCDIR="${__DATA}" ;;
+  "D")  echo "Update Dest BaseDir"; _get_user_resp "Enter NEW DST BASEDIR ( Current:[${DSTDIR}] ): "; DSTDIR="${__DATA}" ;;
+  "L")  echo "Update List Path"   ; _get_user_resp "Enter LIST filename [list.txt]: "               ; LIST="${__DATA}"   ;;
+  "N")  echo "NRG=>ISO"           ; _create_file_list_by_ext "${SRCDIR}" "${_dnrgiso["list"]}" "${_dnrgiso["ext"]}"    ; _loop_list_do_ext _dnrgiso ;;
+  "T")  echo "Testing ISO images" ; _create_file_list_by_ext "${SRCDIR}" "${_disotest["list"]}" "${_disotest["ext"]}"  ; _loop_list_do_ext _disotest ;;
+  "Z")  echo "unZIP to FOLDER"    ; _create_file_list_by_ext "${SRCDIR}" "${_dunzip["list"]}"   "${_dunzip["ext"]}"    ; _loop_list_do_ext _dunzip;;     ## "${SRCDIR}" "${ZIP_LIST}" "${DSTDIR}" ;;
 	"11") echo "tar extract"; _create_file_list_by_ext "${DSTDIR}" "${_dtarx["list"]}" "${_dtarx["ext"]}"; _loop_list_do_ext _dtarx ;;
 	"12") echo "tar create";  _create_folder_list "${SRCDIR}" "${_dtarc["list"]}" ; _loop_list_do _dtarc ;;
   
+
+  #  "w") echo "wget enumerate filenames"; _loop_wget_dllist_copy_to_enumerated_fileset   "${_dwgetenum["srcdir"]}" "${_dwgetenum["list"]}" "${_dwgetenum["destdir"]}" ;;
+
+   "w") echo "wget enumerate filenames"; ( ${_dwgetenum["func"]}   "${_dwgetenum["srcdir"]}" "${_dwgetenum["list"]}" "${_dwgetenum["destdir"]}") ;;
+  
+  #  "w") echo "wget enumerate filenames"; _loop_wget_dllist_copy_to_enumerated_fileset   "${_dwgetenum["srcdir"]}" "${_dwgetenum["list"]}" "${_dwgetenum["destdir"]}";;
 
   
   "0") echo "exiting..."; exit 0;;
@@ -214,7 +223,6 @@ _menu () {
 
 # NOT IMPLEMENTED --------------------------------------------------------------------
 	# "5") echo "Edit samplefolders.txt"; nano "${SRCDIR}"/"${FOLDER_LIST}";;
-  # "w") echo wget filename; _loop_WGET_LIST_copy_enumeration  "${SRCDIR}" "${WGET_LIST}" "${DSTDIR}" ;;
   # "3") echo "Create list of folders [ie: list.txt]"; _create_folder_list "${SRCDIR}" "${LIST}" ;;
   # "R") echo "unRAR to FOLDER"
    #     create_file_list_by_ext "${SRCDIR}" $"{ZIP_LIST}" "rar"
