@@ -8,44 +8,11 @@ _LOG=test.log
 SRCDIR=
 DSTDIR=
 LIST=
-
-# SRC_BASE_DIR="/mnt/data/000/_isomake" #"/home/uc/mm3/s/000"
-# DST_BASE_DIR="/mnt/data/000/_isomake" #"/home/uc/mm3/s/000"
-ISO_LIST="iso_list.txt"
-SRC_FOLDER_LIST="samplefolders.txt"
-SRC_BASE_DIR_LOG="dir2iso.log"
-ISO_LOG="iso_list.log"
-ISO_MOUNT_LOG="iso_mount.log"
-ISO_MOUNTPOINT="/media/isomount"
-DST_ISO_LIST="iso_list.txt"
-#-----------------------------------
 ## WGET-ONLY
 # SRCDIR="/home/uc/Downloads/wget/imgs" #"/home/uc/mm3/s/000"
 # DSTDIR="/home/uc/Downloads/wget/imgsnum" #"/home/uc/mm3/s/000"
 WGET_LIST="/home/uc/Downloads/wget/imgs/wglist.txt"
 WGET_LOG="wget_list.log"
-#-----------------------------------
-## NRG-ONLY
-NRG_LIST="nrg_list.txt"
-NRG_LOG="nrg_list.log"
-#-----------------------------------
-## RAR ONLY
-RAR_LIST="rar_list.txt"
-RAR_LOG="rar_list.log"
-#-----------------------------------
-## ZIP ONLY
-ZIP_LIST="zip_list.txt"
-ZIP_LOG="zip_list.log"
-#-----------------------------------
-SRC_FOLDER=""   # relative path under SRC_BASE_DIR
-SRC_PATH=""     #absolute path
-
-#---------------------------------------------------------------------
-# VARS
-fname=""
-volname=""
-isoname=""
-srcfolder=""
 
 #---------------------------------------------------------------------
 # DATA OBJECTS
@@ -149,48 +116,24 @@ menu () {
 	# "1")echo "Processing Single Folder to ISO"
   #       process_single_folder 
   #       ;;
-  "2") echo "Testing SINGLE ISO Image"
-    _process_testiso_prompt_single
-    ;;
-	"3") echo "Create list of folders [ie: list.txt]"
-		_create_folder_list "${SRCDIR}" "${LIST}"
-		;;
-	"4") echo "dir2iso"
-    _dmkiso["list"]="${LIST}"
-    _loop_list_do _dmkiso
-    #_dmkiso
-		# loop_ISO_LIST_create_iso "${SRCDIR}" "${FOLDER_LIST}" "${DSTDIR}"
-		;;
+  "2") echo "Testing SINGLE ISO Image"; _process_testiso_prompt_single ;;
+	"3") echo "Create list of folders [ie: list.txt]"; _create_folder_list "${SRCDIR}" "${LIST}" ;;
+	"4") echo "dir2iso"; _dmkiso["list"]="${LIST}"; _loop_list_do _dmkiso ;;
 	# "5") echo "Edit samplefolders.txt"
 	# 	nano "${SRCDIR}"/"${FOLDER_LIST}"
 	# 	;;
-	"S") echo "Update Src BaseDir"
-    _get_user_resp "Enter NEW SRC BASEDIR ( Current:[${SRCDIR}] ): "
-    SRCDIR="${__DATA}"
-    ;;
-  "D") echo "Update Dest BaseDir"
-    _get_user_resp "Enter NEW DST BASEDIR ( Current:[${DSTDIR}] ): "
-    DSTDIR="${__DATA}"
-    ;;
-  "L") echo "Update List Path"
-    _get_user_resp "Enter LIST filename [list.txt]: "
-    LIST="${__DATA}"
-    ;;
+	"S") echo "Update Src BaseDir"; _get_user_resp "Enter NEW SRC BASEDIR ( Current:[${SRCDIR}] ): "; SRCDIR="${__DATA}" ;;
+  "D") echo "Update Dest BaseDir"; _get_user_resp "Enter NEW DST BASEDIR ( Current:[${DSTDIR}] ): "; DSTDIR="${__DATA}" ;;
+  "L") echo "Update List Path"; _get_user_resp "Enter LIST filename [list.txt]: " ; LIST="${__DATA}" ;;
   # "w") echo wget filename
   #     _loop_WGET_LIST_copy_enumeration  "${SRCDIR}" "${WGET_LIST}" "${DSTDIR}" 
   #     ;;
-  "T") echo "Testing ISO images"
+  "T") echo "Testing ISO images"; create_file_list_by_ext "${DSTDIR}" "${_disotest["list"]}" "${_disotest["ext"]}"; _loop_list_do_ext _disotest ;;
       # echo "$(getTimestamp)" > "${DSTDIR}/${ISO_MOUNT_LOG}"
       # create_file_list_by_ext "${DSTDIR}" "${ISO_LIST}" "${_disotest["ext"]}"
       # loop_isofile_list_mount_umount "${DSTDIR}" "${ISO_LIST}" "${ISO_MOUNTPOINT}"
-      create_file_list_by_ext "${DSTDIR}" "${_disotest["list"]}" "${_disotest["ext"]}"
-      _loop_list_do_ext _disotest
+      
       # loop_isofile_list_mount_umount "${DSTDIR}" "${_disotest["list"]}" "${_disotest["mountpoint"]}"
-
-
-
-      ;;
-  # "N") echo "NRG2ISO"
   #     create_file_list_by_ext "${SRCDIR}" $"{NRG_LIST}" "nrg"
   #     _iterate_nrgfile_list_convert_nrg2iso "${SRCDIR}" "${DSTDIR}" "${NRG_LIST}"
   #     ;;
@@ -275,21 +218,6 @@ _loop_list_do_ext() {
 _process_dir2iso(){ 
   local -n _z=$1
   mkisofs -lJR -pad -input-charset "utf-8" -V "${_z["line"]:0:31}" -o "${DSTDIR}/${_z["line"]}.iso" "${SRCDIR}/${_z["line"]}"
-
-# local __isoname="${__fname}.iso"
-  # __volname="${3:0:31}"
-  # _z["volume"]="${_z["line"]}"
-
-  # _process_iso_mkiso "${_z["srcdir"]}" "${_z["src_folder"]}" "${_z["volume"]}" "${_z["out_file"]}" "${_z["destdir"]}"
-#   _process_iso_mkiso_absolute_path
-
-  # __src_base_dir="${1}" 
-  # __src_folder="${2}"	    # single 
-	# __volname="${3:0:31}"		# truncate at 31 chars for juliet
-	# __fname="${4}"		#get_fname
-	# __dest_base_folder="${5}"
-
-  #process_with_lJR
 }
 
 # convert NRG to ISO
