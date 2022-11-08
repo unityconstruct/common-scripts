@@ -1,7 +1,12 @@
 #!/bin/bash
 FRAMEWORKPATH="$(dirname "$0")/.."
-source ${FRAMEWORKPATH}/funcs/collector_remote.sh
+source "${FRAMEWORKPATH}"/funcs/collector_remote.sh
 echo "[main][framworkpath:${FRAMEWORKPATH}][Testing Timestamp:$(getTimestamp)]"
+_LOG="$FRAMEWORKPATH/log/test.log"
+_log "verifying log location:"
+ls -la ${_LOG}
+_log ----------------------------------
+
 
 # Vars
 DSTDIR=/tmp/rom
