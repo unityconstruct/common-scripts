@@ -2,6 +2,16 @@
 #-----------------------------------------------------------------------
 # ISO FUNCS
 #-----------------------------------------------------------------------
+#  NOT USED
+ # declare -A _dromcopy=(["discname"]="discname"
+ #   ["fname"]="*discname.iso"
+ #   ["DRIVE"]=""
+ #   ["blocksize"]=""
+ #   ["dstdir"]=""
+ #   ["srcdir"]=""
+ #   ["tardir"]=""
+ #   ["stordir"]=""
+ # )
 
 #-----------------------------------------------------------------------
 # MKISOFS FUNCS
@@ -123,8 +133,9 @@ _process_testiso_umountimg () {
 # DD RIP FUNCS
 #-----------------------------------------------------------------------
 
-_dd_select_dev() {
-
+## display block devices, then enter # for cdrom [sr_] its
+ #
+_dd_cdrom_select_dev() {
 	echo "listing devices"
 	lsblk
 	echo "Current DRIVE:[${DRIVE}]"
@@ -140,92 +151,66 @@ _dd_select_dev() {
 		DRIVE="/dev/sr${resp}";
 		echo "Drive NEW:[${DRIVE}]"
 	fi
-
 }
 
-
-
-_dd_show_isosize_values () {
-  local _DRIVE="${1}"
+## display isosize values
+ # func signature
+ #   _dd_show_isosize_values  ${_drive} ${_blocksize} ${__blocks}
+_dd_cdrom_show_isosize_values () {
+  local _drive="${1}"
   local _blocksize="${2}"
   local _blocks="${3}"
-  echo "${_DRIVE}"
-  echo "${_blocks}"
-  echo "${_blocksize}"
+  echo "drive     : [${_drive}]"
+  echo "blocks    : [${_blocks}]"
+  echo "blocksize : [${_blocksize}]"
 }
 
 
-declare -A _dromcopy=(["discname"]="discname"
-  ["fname"]="*discname.iso"
-  ["DRIVE"]=""
-  ["blocksize"]=""
-  ["dstdir"]=""
-  ["srcdir"]=""
-  ["tardir"]=""
-  ["stordir"]=""
-
-)
-
-
-_dd_device_to_file(){
+## use dd to image a cdrom disc device
+ # function signature
+ # _dd_device_to_file ${_drive}${_dstdir}${_isoname}${_blocksize}
+ #
+_dd_cdrom_device_to_file(){
     local _drive="$1"
-    local _DSTDIR="$2"
-    local _fname="$3"
+    local _dstdir="$2"
+    local _isoname="$3"
     local _blocksize="$4"
-
-    # get size
-	local blocks="$(isosize -d ${_blocksize} ${_drive})"
-	_dd_show_isosize_values  ${_drive} ${_blocksize} ${blocks}
-	_log "sudo dd if=${_drive} of=${_DSTDIR}/${_fname} bs=${_blocksize} count=${blocks} status=progress"
-    sudo dd if=${_drive} of=${_DSTDIR}/${_fname} bs=${_blocksize} count=${blocks} status=progress
+	local __blocks="$(isosize -d ${_blocksize} ${_drive})"  # generate blocks on the fly
+	_dd_cdrom_show_isosize_values  ${_drive} ${_blocksize} ${__blocks}
+	_log "sudo dd if=${_drive} of=${_dstdir}/${_isoname} bs=${_blocksize} count=${__blocks} status=progress"
+    sudo dd if=${_drive} of=${_dstdir}/${_isoname} bs=${_blocksize} count=${__blocks} status=progress
 }
 
-_dd_command(){
- echo .
-}
-
+## iteratively create a iso from a mounted cdrom disc
+ # func signature:
+ #   _ripdiscs ${_drive} ${_dstdir} ${_mountpoint} ${_stordir} ${_volname}
+ #
 _ripdiscs() {
-    #TAR NEEDS THESE
     local _drive=${1}
     local _dstdir=${2}
     local _mountpoint=${3}
     local _stordir=${4}
-    # ${_drive} ${_dstdir} ${_mountpoint} ${_stordir}
-
-    
-
-	# prompt for filename, then rip to ISO
-	echo "Add disc to drive"
-	echo "Type filename ( '.iso' will be appended) :"
-	read -p "Filename: " resp
-	_volname="${resp}".iso
-	# tardir="${_volname}"
-	echo "Creating:[${_dstdir}/${_volname}]";
-	_close_drive
-
-    
-    
-    
-
+    local _volname=${5}
+    echo "[$(getTimestamp)]:ripdiscs"
     _paused
-	_ripdisc $@ "${_volname}"
+	_ripdisc $@
     _paused
-
-
-	_doagain
+#TODO: NEEDS TESTING
+_ripdiscs_again $@ 
 
 }
 
-
-_doagain() {
-	# prompt for ripping another 
+## prompt to ripping another disc
+ # 
+_ripdiscs_again() {
+    echo "[$(getTimestamp)]:ripdiscs_again"
 	read -p "RIP another? : " resp
 	echo "Typed:[${resp}]"
 	if [ "${resp}" == "y" -o "${resp}" == "Y" ] ; then
 		echo "ripping another"
-		_ripdiscs;
-	elif [ "${resp}" == "a" -o "${resp}" == "A" ] ; then
-		__abcde_discs
+		_ripdiscs  $@ ;
+	# elif [ "${resp}" == "a" -o "${resp}" == "A" ] ; then
+	# 	__abcde_discs
 	else 
 		echo "returning to menu"
 		__menu
@@ -236,61 +221,99 @@ _doagain() {
 
 ## rip cdrom device at low level with 'dd'
  #
+
+## create a iso from a mounted cdrom disc
+ # func signature:
+ #   _ripdisc ${_drive} ${_dstdir} ${_mountpoint} ${_stordir} ${_volname}
 _ripdisc () {
-    #TAR NEEDS THESE
-    local _drive=${1}
-    local _dstdir=${2}
-    local _mountpoint=${3}
-    local _stordir=${4}
-    #TAR NEEDS THESE
-    local _volname=${5}
-    
-    local _blocksize=2048
+    local _drive=${1}       # cdrom drive: /dev/sr0
+    local _dstdir=${2}      # working dir: /tmp/rom
+    local _mountpoint=${3}  # cdrom mount point : /tmp/rom/mnt
+    local _stordir=${4}     # long term storage path to move finished backup to
+    local _volname=${5}     # discname, _isoname will be derived with '.iso' extendion
+    local _isoname=""       # iso filename - initializing here
+    local _blocksize=2048   # rom blocksise for use with dd
+    echo "[$(getTimestamp)]:ripdisc"
+    echo "Add disc to drive!"
+
+
+    ## if volume name is passed from RIPDISC, append .iso to it
+     #  otherwise prompt for _volname directly
+    if [ "$#" = "4" -a -z "${_volname}" ]; then
+        # prompt for filename
+        echo "VOLNAME IS empty: [${_volname}]"
+        _get_user_resp "Type filename ('.iso' will be appended) : ";
+        _volname="${__DATA}"
+    fi
+
+    echo "VOLNAME: [${_volname}]"
+    _isoname=${_volname}.iso    # update _isoname with [volname].iso
+
+	echo "Creating:[${_dstdir}/${_isoname}]";
+# _close_drive
+
+# MOVED TO RIPDISC
+# # prompt for filename, then rip to ISO
+# echo "Add disc to drive"
+# echo "Type filename ( '.iso' will be appended) :"
+# read -p "Filename: " resp
+# _volname="${resp}"
+# local _isoname=${_volname}.iso
+# # tardir="${_volname}"
+# echo "Creating:[${_dstdir}/${_isoname}]";
+
 
 	# rip to filename specificed in CLI call
 	echo "drive    : [${_drive}]"
-	echo "DSTDIR   : [${_dstdir}]"
-	echo "volname  : [${_volname}]"
-	echo "stordir  : [${_stordir}]"      # 
+	echo "dstdir   : [${_dstdir}]"
+	echo "isoname  : [${_isoname}]"
+	echo "stordir  : [${_stordir}]"
 	echo "blocksize: [${_blocksize}]"
 
+    
 
-    _dd_device_to_file ${_drive} ${_dstdir} ${_volname} ${blocksize}
-    # ------------ __dd_device_to_file ------------------------
-	# get size
-	# blocks=$(isosize -d ${blocksize} ${drive});
-	# _dd_show_isosize_values
-	# sudo dd if=${drive} of=${DSTDIR}${fname} bs=${blocksize} count=$blocks status=progress;
-    # ------------ __dd_device_to_file ------------------------
+#NEED TO TEST
+    echo "testing _tardisc"
+    echo "$#"
+    _paused
+    ## if volume name is passed from RIPDISC, it will be passed to tardisc
+     #  otherwise manually add it to the tardisc call
+    if [ "$#" = "5" ]; then
+        echo "passing params[+_volname] to _tardisc: [$@]"
+        _paused
+        _tardisc $@
+    else
+       echo "passing params[+_volname] to _tardisc: [$@ ${_volname}]"
+        _paused
+        _tardisc $@ ${_volname}
+    fi
+#NEED TO TEST
 
-
-
+    _dd_cdrom_device_to_file ${_drive} ${_dstdir} ${_isoname} ${blocksize}
 	# save error code from the dd rip
 	status=$?
 	echo "\nRIPSSTATUS: [${status}]\n"
 	if [ ${status} -eq 0 ] ; then
-		echo ""
-		echo ""
+		echo ""; echo ""
 		echo "************************"
-		echo "RIP SUCCESS :: IMAGE [${_dstdir}/${_volname}]"
+		echo "RIP SUCCESS :: IMAGE [${_dstdir}/${_isoname}]"
 		echo "************************"
-		echo ""
-		echo ""
+		echo ""; echo ""
 		echo "pausing for 30s to let write buffer clear before flushing with sync..."; 
 		sleep 30
 	fi
 
-	sync
+	sync ## flush cache to disc to ensure file is fully written and buffers are emptied
 
 	echo "making file writeable for all with 777.."
-	sudo chmod 777 ${_dstdir}/${_volname}
+	sudo chmod 777 ${_dstdir}/${_isoname}
 
 	# if disc rip fails, then tar it
 	if [ ${status} -ne 0 ] ; then
-		echo "RIP ERROR: Status: [${status}]: [${_dstdir}/${_volname}]" >&2
+		echo "RIP ERROR: Status: [${status}]: [${_dstdir}/${_isoname}]" >&2
 		# Rename image with '_' prefix
-		echo "RENAMING ISO IMAGE:[${_volname}] to [_${_volname}]"
-		mv ${_dstdir}/${_volname} ${_dstdir}/"_"${_volname}
+		echo "RENAMING ISO IMAGE:[${_isoname}] to [_${_isoname}]"
+		mv ${_dstdir}/${_isoname} ${_dstdir}/"_"${_isoname}
 		# move incomplete image to remote storage
 		echo "Moving FROM:[${_dstdir}*.iso] TO:[${_stordir}]..."
 		mv ${_dstdir}/*.iso ${_stordir}
@@ -300,24 +323,18 @@ _ripdisc () {
 		else       
 	   		echo "MOVE ERROR: Status[${status}] :: FROM:[${_dstdir}*.iso] TO:[${_stordir}]"
 	    fi
+        # checking push was successful
 	    echo "Done, Listing local then remote..."
-	    echo "[${_dstdir}/${_volname}]"
-		ls -la ${_dstdir}/${_volname}
-		echo "[${_stordir}/${_volname}]"
-	    ls -la ${_stordir}/${_volname}
+	    echo "[${_dstdir}/${_isoname}]"
+		ls -la ${_dstdir}/${_isoname}
+		echo "[${_stordir}/${_isoname}]"
+	    ls -la ${_stordir}/${_isoname}
 		echo "TAR'ing disc now...";
 
 
-
-
-
-		_tardisc
-
-
-
-
-
-
+#NEED TO TEST
+		_tardisc $@
+#NEED TO TEST
 
 
 
@@ -456,23 +473,24 @@ _abcde_rip () {
 # TAR FUNCS
 #-----------------------------------------------------------------------
 
-##
+## iteratively create a tar from a mounted cdrom disc
+ # func signature:
+ #   _tardiscs ${_drive} ${_dstdir} ${_mountpoint} ${_stordir} ${_volname}
  #
 _tardiscs () {
-    local _drive=${1}
-    local _dstdir=${2}
-    local _mountpoint=${3}
-    local _stordir=${4}
+    local _drive=${1}       # cdrom drive: /dev/sr0
+    local _dstdir=${2}      # working dir: /tmp/rom
+    local _mountpoint=${3}  # cdrom mount point : /tmp/rom/mnt
+    local _stordir=${4}     # long term storage path to move finished backup to
+    local _volname=${5}     # discname, _tarname will be derived with '.tar' extendion
+                            # volname is empty if this func is called direct from menu
+    echo "[$(getTimestamp)]:tardiscs"
 
-	# prompt for filename, then rip to TAR
-    _get_user_resp "Type filename ('.tar' will be appended) : ";
-    _tarname="${__DATA}"
-	echo "Creating:[${_dstdir}/${_tarname}]";
+    echo "passing params to _tardisc: [$@]"
+	_tardisc $@
 
-
-	_tardisc $@ ${_tarname}
-	# _tardisc ${_drive} ${_dstdir} ${_mountpoint} ${_stordir} ${_tarname}
-	_taragain $@
+    # echo "passing params to _taragain: [$@]"
+	# _taragain $@
 	# _taragain ${_drive} ${_dstdir} ${_mountpoint} ${_stordir}
 
 }
@@ -480,12 +498,13 @@ _tardiscs () {
 ##
  #
 _taragain () {
-
+    echo "[$(getTimestamp)]:taragain"
     # prompt for ripping another 
     read -p "TAR another? : " resp
     echo "Typed:[${resp}]"
     if [ "${resp}" = "y" -o "${resp}" = "Y" ] ; then
         echo "tar-ing another"
+        echo "passing params to _tardiscs: [$@]"
         tardiscs $@
     else 
         echo "exiting"
@@ -495,17 +514,33 @@ _taragain () {
 
 }
 
-
-# Mount DRIVE and create TAR from contents
- # _tardisc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" "TARNAME" ${STORDIR} ;;
+ 
+## create a tar from a mounted cdrom discMount DRIVE and create TAR from contents
+ # func signature:
+ #   _tardisc ${_drive} ${_dstdir} ${_mountpoint} ${_stordir} ${_volname}
  #
 _tardisc () {
-    local _drive=${1}
-    local _dstdir=${2}
-    local _mountpoint=${3}
-    local _stordir=${4}
-    local _tarname=${5}
-    
+    local _drive=${1}       # cdrom drive: /dev/sr0
+    local _dstdir=${2}      # working dir: /tmp/rom
+    local _mountpoint=${3}  # cdrom mount point : /tmp/rom/mnt
+    local _stordir=${4}     # long term storage path to move finished backup to
+    local _volname=${5}     # discname, _tarname will be derived with '.tar' extendion
+    local _tarname=""       # tarfile name with tar ext - intializing here
+    echo "[$(getTimestamp)]:tardisc"
+
+    ## if volume name is passed from RIPDISC, append .tar to it
+    ##  otherwise prompt for tarname directly
+    if [ -z "${_volname}" ]; then
+	  # prompt for filename, then rip to TAR
+      _get_user_resp "Type filename ('.tar' will be appended) : ";
+      _tarname="${__DATA}.tar"
+    else
+      _tarname=${_volname}.tar
+    fi
+	  echo "Creating:[${_dstdir}/${_tarname}]";
+
+
+
     _dev_unmount ${_drive}      # _cdrom_umount ${_drive} ${_mountpoint}
     _close_drive ${_drive}
     # device might be automounted elsehere by the OS, so unmount using the device handle
@@ -531,9 +566,9 @@ _tardisc () {
 	echo "Taring files to:[${_dstdir}/${_tarname}.tar]"
     cd ${_mountpoint}
     echo "tar -cv --ignore-failed-read  --directory=${_mountpoint} -f ${_dstdir}/${_tarname}.tar *   "
-	tar -cv --ignore-failed-read   -f ${_dstdir}/${_tarname}.tar  *     | tee ${_dstdir}${_LOG}
+	tar -cv --ignore-failed-read   -f ${_dstdir}/${_tarname}.tar  *    # | tee ${_dstdir}/${_LOG}
     cd ..
-    chmod 777 ${DSTDIR}/*.tar                                           | tee ${_dstdir}${_LOG}
+    chmod 777 ${_dstdir}/*.tar                                          # | tee ${_dstdir}/${_LOG}
 
     # device might be automounted elsehere by the OS, so unmount using the device handle
     _dev_unmount ${_drive}      # _unmount_disc ${_drive} ${_mountpoint}
@@ -610,3 +645,5 @@ _dev_unmount () {
 	echo "UnMounting disc:[${_drive}]"
 	sudo umount ${_drive}
 }
+
+

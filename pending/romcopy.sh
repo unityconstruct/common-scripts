@@ -16,7 +16,7 @@ _LOG=test.log
 #STORDIR=/media/media1/000
 #STORDIR=/media/media1/iso/
 DSTDIR=/tmp/rom
-STORDIR=/media/media1/iso/
+STORDIR=/media/media1/iso
 fname=disc.iso
 tardir=disc
 # source DRIVE
@@ -477,7 +477,7 @@ echo "StorDir:[${STORDIR}]"
 echo "---------------------"
 
 # chgRomDrive
-_dd_select_dev
+_dd_cdrom_select_dev
 
 if [ -z "$1" ] ; then
 	__menu
