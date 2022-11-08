@@ -82,8 +82,8 @@ _process_audio_folder() {
 _process_audio_file() {
   local _file="${1}"
   local _ext="${2}"
-  echo ffmpeg -i "${_file}" -ar 44100 $(_trim_ext ${_file})"${_ext}"
-  ffmpeg -i "${_file}" -ar 44100 $(_trim_ext ${_file})"${_ext}"
+  echo ffmpeg -i "${_file}" -ar 44100 $(_trim_ext "${_file}")"${_ext}"
+  ffmpeg -i "${_file}" -ar 44100 $(_trim_ext "${_file}")"${_ext}"
 }
 
 ## find and process supported image files
@@ -113,6 +113,6 @@ _process_img_folder() {
 _process_img_file() {
   local _file="${1}"
   local _ext="${2}"
-  echo ffmpeg -i "${_file}" $(_trim_ext ${_file})"${_ext}"
-  ffmpeg -i "${_file}" $(_trim_ext ${_file})"${_ext}"
+  echo ffmpeg -i "${_file}" $(_trim_ext "${_file}")"${_ext}"
+  ffmpeg -i "${_file}" $(_trim_ext "${_file}")"${_ext}"
 }
