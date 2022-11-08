@@ -32,6 +32,43 @@ _split_string_by () {
   IFS=""
 }
 
+
+
+
+## Search a string and perform one-or-more character replacements
+ # returns the result with `echo`
+ # Params:
+ #  1 - string input ( original string/HAYSTACK ) 
+ #  2 - OLD character(NEEDLE) to SEARCH  [ DEFAULT=' ']
+ #  3 - NEW character                    [ DEFAULT='-']
+ #
+ # tr replaces a character in a string
+_replace_char () {
+  local stringinput="${1}"
+  local char_needle="${2:0:1}"
+   if [ -z "$char_needle" ] ; then
+     char_needle=" "
+   fi
+  local char_replace="${3:0:1}"
+   if [ -z "$char_replace" ] ; then
+     char_replace="-"
+   fi
+   ## ONE LINER
+  echo "${1}" | tr "${char_needle:0:1}" "${char_replace:0:1}"
+  ## DEBUG OUTPUT
+  #echo "[DEBUG OUPUT] Needle:[$char_needle] Replace:[$char_replace] ==> StringInput:[${stringinput}] ==> StringOutput:[${stringoutput}]"
+}
+
+
+
+
+
+
+
+
+
+
+
 ## trim extension off a filename or path/filename
  # returns the value with 'echo'
  # split delim is hard-coded to '.'

@@ -1,8 +1,13 @@
-11#!/bin/bash
-source $(dirname "$0")/collector.sh
-_LOG=test.log
-
+#!/bin/bash
+# source $(dirname "$0")/collector.sh
+FRAMEWORKPATH="$(dirname "$0")/.."
+source ${FRAMEWORKPATH}/funcs/collector_remote.sh
+echo "[main][framworkpath:${FRAMEWORKPATH}][Testing Timestamp:$(getTimestamp)]"
 # GLOBAL VARS ---------------------------------------------------------
+_LOG=../test.log
+SRCDIR=/tmp/tar
+DSTDIR=/tmp/tar
+LIST=list.txt
 
 # GLOBALS for TEST
  #DIR2ISOTEST
@@ -23,9 +28,6 @@ _LOG=test.log
  # DSTDIR=/tmp/tar
 
 
-SRCDIR=/tmp/tar
-DSTDIR=/tmp/tar
-LIST=list.txt
 
 #---------------------------------------------------------------------
 # NOT IMPLEMENTED YET 
@@ -123,10 +125,7 @@ declare -A _dunzip=(["func"]="_process_unzip"
 )
 
 ## WGET-ONLY -------------------------------------------------------------
- # SRCDIR="/home/uc/Downloads/wget/imgs" #"/home/uc/mm3/s/000"
- # DSTDIR="/home/uc/Downloads/wget/imgsnum" #"/home/uc/mm3/s/000"
- WGET_LIST="/home/uc/Downloads/wget/imgs/wglist.txt"
-#  WGET_LOG="wget_list.log"
+  #
  declare -A _dwgetenum=(["func"]="_loop_wget_dllist_copy_to_enumerated_fileset"
    ["list"]="/home/uc/Downloads/wget/imgs/wglist.txt"
    ["srcdir"]="/home/uc/Downloads/wget/imgs"
@@ -136,8 +135,14 @@ declare -A _dunzip=(["func"]="_process_unzip"
    ["line"]="null"
  )
 
-
- ## WGET-ONLY -------------------------------------------------------------
+ declare -A _dwgetenum=(["func"]="_loop_wget_dllist_copy_to_enumerated_fileset"
+   ["list"]="/home/uc/Downloads/wget/imgs/wglist.txt"
+   ["srcdir"]="/home/uc/Downloads/wget/imgs"
+   ["destdir"]="/home/uc/Downloads/wget/imgsnum"
+   ["ext"]="http"
+   ["filename"]="null"
+   ["line"]="null"
+ )
 
 
 
@@ -153,13 +158,16 @@ _runme () {
 	_menu
 }
 
-# MAIN MENU --------------------------------------------------------------------
+#---------------------------------------------------------------------
+# MAIN MENU
+#---------------------------------------------------------------------
 
 ## Menu Text
  #
-_menu_show() {
+_menu_text() {
  echo " -------------------------------------------- 
  -- list-iterator [LOG: ${_LOG}] --
+ -- [ A ] AUDIO MENU
  -------------------------------------------- 
  SRCDIR:          [${SRCDIR}]
  DSTDIR:          [${DSTDIR}]
@@ -181,19 +189,19 @@ _menu_show() {
  [W] enumerate files/urls
  [Z] unZIP to FOLDER using [${SRCDIR}/${ZIP_LIST}]
  ------------------------------------------------
- [0][x]-exit 0 
- [*]-Prompt again"
+ [0][x]-exit 0  [*]-Prompt again"
 }
 
 ## Menu Logic
  #
 _menu () {
-  _menu_show
+  _menu_text
 	echo "------------------------------------------------"
 	read -p "enter option: " opt
 	echo "------------------------------------------------"
 	echo "Typed: $opt"
 	case "$opt" in
+  "A") _menu_audio ;;
 	"1")  echo "Processing Single Folder to ISO"; _process_testiso_prompt_single;; # _process_single_folder ;;
   "2")  echo "Testing SINGLE ISO Image"; _process_testiso_prompt_single ;;
 	"4")  echo "dir2iso"            ; _create_folder_list "${SRCDIR}" "${LIST}"; _dmkiso["list"]="${LIST}"               ; _loop_list_do _dmkiso ;;
@@ -201,21 +209,13 @@ _menu () {
   "D")  echo "Update Dest BaseDir"; _get_user_resp "Enter NEW DST BASEDIR ( Current:[${DSTDIR}] ): "; DSTDIR="${__DATA}" ;;
   "L")  echo "Update List Path"   ; _get_user_resp "Enter LIST filename [list.txt]: "               ; LIST="${__DATA}"   ;;
   "N")  echo "NRG=>ISO"           ; _create_file_list_by_ext "${SRCDIR}" "${_dnrgiso["list"]}" "${_dnrgiso["ext"]}"    ; _loop_list_do_ext _dnrgiso ;;
-  "T")  echo "Testing ISO images" ; _create_file_list_by_ext "${SRCDIR}" "${_disotest["list"]}" "${_disotest["ext"]}"  ; _loop_list_do_ext _disotest ;;
+  "T")  echo "TEST ISO"           ; _create_file_list_by_ext "${SRCDIR}" "${_disotest["list"]}" "${_disotest["ext"]}"  ; _loop_list_do_ext _disotest ;;
   "Z")  echo "unZIP to FOLDER"    ; _create_file_list_by_ext "${SRCDIR}" "${_dunzip["list"]}"   "${_dunzip["ext"]}"    ; _loop_list_do_ext _dunzip;;     ## "${SRCDIR}" "${ZIP_LIST}" "${DSTDIR}" ;;
-	"11") echo "tar extract"; _create_file_list_by_ext "${DSTDIR}" "${_dtarx["list"]}" "${_dtarx["ext"]}"; _loop_list_do_ext _dtarx ;;
-	"12") echo "tar create";  _create_folder_list "${SRCDIR}" "${_dtarc["list"]}" ; _loop_list_do _dtarc ;;
-  
-
-  #  "w") echo "wget enumerate filenames"; _loop_wget_dllist_copy_to_enumerated_fileset   "${_dwgetenum["srcdir"]}" "${_dwgetenum["list"]}" "${_dwgetenum["destdir"]}" ;;
-
-   "w") echo "wget enumerate filenames"; ( ${_dwgetenum["func"]}   "${_dwgetenum["srcdir"]}" "${_dwgetenum["list"]}" "${_dwgetenum["destdir"]}") ;;
-  
-  #  "w") echo "wget enumerate filenames"; _loop_wget_dllist_copy_to_enumerated_fileset   "${_dwgetenum["srcdir"]}" "${_dwgetenum["list"]}" "${_dwgetenum["destdir"]}";;
-
-  
-  "0") echo "exiting..."; exit 0;;
-	"x") echo "exiting..."; exit 0;;
+	"11") echo "tar extract"        ; _create_file_list_by_ext "${DSTDIR}" "${_dtarx["list"]}" "${_dtarx["ext"]}"; _loop_list_do_ext _dtarx ;;
+	"12") echo "tar create"         ; _create_folder_list "${SRCDIR}" "${_dtarc["list"]}" ; _loop_list_do _dtarc ;;
+  "w")  echo "wget enumerate filenames"; ( ${_dwgetenum["func"]}   "${_dwgetenum["srcdir"]}" "${_dwgetenum["list"]}" "${_dwgetenum["destdir"]}") ;;
+  "0")  echo "exiting..."; exit 0;;
+	"x")  echo "exiting..."; exit 0;;
 	*) echo "Invalid Option selected, Retrying"; _menu ;;
 	esac
 	_menu	# show the menu again
@@ -229,6 +229,64 @@ _menu () {
    #     loop_src_zipfile_list_unzip "${SRCDIR}" "${RAR_LIST}" "${DSTDIR}"
    #     ;;
 # NOT IMPLEMENTED --------------------------------------------------------------------
+}
+
+#---------------------------------------------------------------------
+# AUDIO MENU
+#---------------------------------------------------------------------
+
+## main menu options display
+ #
+_menu_audio_text() {
+  echo "-- FFMPEG ---------------------
+ [e]xt       :[${_menu_ext}]
+ [p]ath/file :[${_menu_path}]
+ ---------------------------------
+ audio [1]folder [2]file
+ image [3]folder [4]file
+ ---------------------------------
+ [0] return [x] exit"
+}
+
+## main AUDIO menu
+ #
+_menu_audio() {
+ _menu_audio_text
+ read -p "Enter selection: " __OPT
+ echo "Typed: [$__OPT]"
+ case "${__OPT}" in
+  "e") _get_user_resp "OUTPUT extension "           ; _menu_ext=$__DATA ;;  #_set_ext ;;
+  "p") _get_user_resp "OUTPUT [path/file] (/a/b/c/)"; _menu_path=$__DATA ;; #_set_path ;;
+  # ------------------------------------------------------------------
+  "1") _process_audio_folder "${_menu_path}" "${_menu_ext}" ;;
+  "2") _process_audio_file   "${_menu_path}" "${_menu_ext}" ;;
+  "3") _process_img_folder   "${_menu_path}" "${_menu_ext}" ;;
+  "4") _process_img_file     "${_menu_path}" "${_menu_ext}" ;;
+  "0") return 0;;
+  "x") exit 0 ;;
+  *) ;;
+ esac
+ _menu_audio
+}
+
+## parse args passed when calling this script
+ #
+_parse_audio() {
+  if [ "${1}" == "file" ]; then
+    process_file "$@"
+  elif  [ "${1}" == "folder" ]; then
+    process_folder "$@"
+  elif  [ "${1}" == "audiofile" ]; then
+    _process_audio_file_cli "$@"
+  elif  [ "${1}" == "audiofolder" ]; then
+    _process_audio_folder_cli "$@"
+  elif  [ "${1}" == "imgfile" ]; then
+    _process_img_file_cli "$@"
+  elif  [ "${1}" == "imgfolder" ]; then
+    _process_img_folder_cli "$@"
+  else
+    _menu
+  fi
 }
 
 
