@@ -1,5 +1,6 @@
 test/temp/*
 log/*
 done/*
+pending/*
 _archive/*
 *.fuse*
