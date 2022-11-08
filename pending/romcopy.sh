@@ -448,12 +448,16 @@ __menu () {
 	# "F") _abcde_flac_encode ${DSTDIR} "VOL5" "ART5-VOL5" "mp3"
 	"F") cd "${DSTDIR}/VOL8"; _abcde_rename_move_flac "${DSTDIR}/VOL8" "ART8-VOL8" ;;
 	
-	"T") _tardisc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" "TARNAME" ${STORDIR} ;;
+	"T") _tardisc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR} "TARNAME" ;;
+	"T2") _tardiscs ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR}  ;;
 
 
 
 	"x") echo "Exiting..."             ; exit 0 ;;
-	"g") echo "START!"; _ripdiscs ;;
+	"g") echo "START!";
+	 _ripdiscs ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR}
+	#  _ripdiscs ${_drive} ${_dstdir} ${_mountpoint} ${_stordir}
+	;;
 		*) ;;
 	esac
 	__menu

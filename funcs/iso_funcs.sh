@@ -185,15 +185,33 @@ _dd_command(){
 }
 
 _ripdiscs() {
+    #TAR NEEDS THESE
+    local _drive=${1}
+    local _dstdir=${2}
+    local _mountpoint=${3}
+    local _stordir=${4}
+    # ${_drive} ${_dstdir} ${_mountpoint} ${_stordir}
+
+    
+
 	# prompt for filename, then rip to ISO
 	echo "Add disc to drive"
 	echo "Type filename ( '.iso' will be appended) :"
 	read -p "Filename: " resp
-	fname="${resp}".iso
-	tardir="${resp}"
-	echo "Creating:[${DSTDIR}${fname}]";
+	_volname="${resp}".iso
+	# tardir="${_volname}"
+	echo "Creating:[${_dstdir}/${_volname}]";
 	_close_drive
-	_ripdisc
+
+    
+    
+    
+
+    _paused
+	_ripdisc $@ "${_volname}"
+    _paused
+
+
 	_doagain
 
 }
@@ -219,15 +237,25 @@ _doagain() {
 ## rip cdrom device at low level with 'dd'
  #
 _ripdisc () {
+    #TAR NEEDS THESE
+    local _drive=${1}
+    local _dstdir=${2}
+    local _mountpoint=${3}
+    local _stordir=${4}
+    #TAR NEEDS THESE
+    local _volname=${5}
+    
+    local _blocksize=2048
+
 	# rip to filename specificed in CLI call
-	echo "stordir  : [${stordir}]"      # 
-	echo "DSTDIR  : [${DSTDIR}]"
-	echo "fname    : [${fname}]"
-	echo "drive    : [${drive}]"
-	echo "blocksize: [${blocksize}]"
+	echo "drive    : [${_drive}]"
+	echo "DSTDIR   : [${_dstdir}]"
+	echo "volname  : [${_volname}]"
+	echo "stordir  : [${_stordir}]"      # 
+	echo "blocksize: [${_blocksize}]"
 
 
-    _dd_device_to_file ${drive} ${DSTDIR} ${fname} ${blocksize}
+    _dd_device_to_file ${_drive} ${_dstdir} ${_volname} ${blocksize}
     # ------------ __dd_device_to_file ------------------------
 	# get size
 	# blocks=$(isosize -d ${blocksize} ${drive});
@@ -244,7 +272,7 @@ _ripdisc () {
 		echo ""
 		echo ""
 		echo "************************"
-		echo "RIP SUCCESS :: IMAGE [${DSTDIR}/${fname}]"
+		echo "RIP SUCCESS :: IMAGE [${_dstdir}/${_volname}]"
 		echo "************************"
 		echo ""
 		echo ""
@@ -255,28 +283,28 @@ _ripdisc () {
 	sync
 
 	echo "making file writeable for all with 777.."
-	sudo chmod 777 ${DSTDIR}/${fname}
+	sudo chmod 777 ${_dstdir}/${_volname}
 
 	# if disc rip fails, then tar it
 	if [ ${status} -ne 0 ] ; then
-		echo "RIP ERROR: Status: [${status}]: [${DSTDIR}/${fname}]" >&2
+		echo "RIP ERROR: Status: [${status}]: [${_dstdir}/${_volname}]" >&2
 		# Rename image with '_' prefix
-		echo "RENAMING ISO IMAGE:[${fname}] to [_${fname}]"
-		mv ${DSTDIR}/${fname} ${DSTDIR}/"_"${fname}
+		echo "RENAMING ISO IMAGE:[${_volname}] to [_${_volname}]"
+		mv ${_dstdir}/${_volname} ${_dstdir}/"_"${_volname}
 		# move incomplete image to remote storage
-		echo "Moving FROM:[${DSTDIR}*.iso] TO:[${stordir}]..."
-		mv ${DSTDIR}/*.iso ${stordir}
+		echo "Moving FROM:[${_dstdir}*.iso] TO:[${_stordir}]..."
+		mv ${_dstdir}/*.iso ${_stordir}
 		status=$?
 		if [ ${status} -eq 0 ] ; then
-	    	echo "MOVE SUCCESS :: FROM:[${DSTDIR}*.iso] TO:[${stordir}]"
+	    	echo "MOVE SUCCESS :: FROM:[${_dstdir}*.iso] TO:[${_stordir}]"
 		else       
-	   		echo "MOVE ERROR: Status[${status}] :: FROM:[${DSTDIR}*.iso] TO:[${stordir}]"
+	   		echo "MOVE ERROR: Status[${status}] :: FROM:[${_dstdir}*.iso] TO:[${_stordir}]"
 	    fi
 	    echo "Done, Listing local then remote..."
-	    echo "[${DSTDIR}/${fname}]"
-		ls -la ${DSTDIR}/${fname}
-		echo "[${stordir}/${fname}]"
-	    ls -la ${stordir}/${fname}
+	    echo "[${_dstdir}/${_volname}]"
+		ls -la ${_dstdir}/${_volname}
+		echo "[${_stordir}/${_volname}]"
+	    ls -la ${_stordir}/${_volname}
 		echo "TAR'ing disc now...";
 
 
@@ -297,10 +325,10 @@ _ripdisc () {
 
 	fi
 	echo "************************"
-	echo "Done with disc. Listing destination iso/tars: "[${DSTDIR}/*.iso/tar]
-	ls -la  ${DSTDIR}/*.{iso,tar}
+	echo "Done with disc. Listing destination iso/tars: "[${_dstdir}/*.iso/tar]
+	ls -la  ${_dstdir}/*.{iso,tar}
 	echo "************************"
-	echo "CURRENT IMAGE [${DSTDIR}/${fname}]"
+	echo "CURRENT IMAGE [${_dstdir}/${_volname}]"
 	echo "************************"
 
 	# attempt to eject disc
@@ -430,27 +458,35 @@ _abcde_rip () {
 
 ##
  #
-tardiscs () {
+_tardiscs () {
+    local _drive=${1}
+    local _dstdir=${2}
+    local _mountpoint=${3}
+    local _stordir=${4}
+
 	# prompt for filename, then rip to TAR
-	echo "Type filename ( '.tar' will be appended) :";
-	read -p "Filename: " resp;
-	fname="${resp}".tar
-	tardir="${resp}"
-	echo "Creating:[${DSTDIR}/${fname}]";
-	tardisc
-	taragain
+    _get_user_resp "Type filename ('.tar' will be appended) : ";
+    _tarname="${__DATA}"
+	echo "Creating:[${_dstdir}/${_tarname}]";
+
+
+	_tardisc $@ ${_tarname}
+	# _tardisc ${_drive} ${_dstdir} ${_mountpoint} ${_stordir} ${_tarname}
+	_taragain $@
+	# _taragain ${_drive} ${_dstdir} ${_mountpoint} ${_stordir}
 
 }
 
 ##
  #
-taragain () {
+_taragain () {
+
     # prompt for ripping another 
     read -p "TAR another? : " resp
     echo "Typed:[${resp}]"
-    if [ "${resp}" == "y" -o "${resp}" == "Y" ] ; then
+    if [ "${resp}" = "y" -o "${resp}" = "Y" ] ; then
         echo "tar-ing another"
-        tardiscs;
+        tardiscs $@
     else 
         echo "exiting"
         exit 0;
@@ -467,8 +503,8 @@ _tardisc () {
     local _drive=${1}
     local _dstdir=${2}
     local _mountpoint=${3}
-    local _tarname=${4}
-    local _stordir=${5}
+    local _stordir=${4}
+    local _tarname=${5}
     
     _dev_unmount ${_drive}      # _cdrom_umount ${_drive} ${_mountpoint}
     _close_drive ${_drive}
