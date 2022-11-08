@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+    xmlns:ns2="http://creativecommons.org/ns#" 
+    xmlns:dc="http://purl.org/dc/elements/1.1/" 
+    xmlns:cc="http://creativecommons.org/ns#"         
+    xmlns:xlink="http://www.w3.org/1999/xlink" 
+    width="720"
+    height="1008"
+    
+    version="1.1"
+    id="svg2"
+    style="fill:black;stroke:black">
+    <!-- Edit the symbol library title and description -->
+    <title>Material Design Icons [Action Set]</title>
+    <desc>Material Design Icons are the official open-source icons featured in the Google Material Design specification.</desc>
+    <!-- Edit the metadata adding the title, date, creator, rights, language, etc. -->
+    <metadata>
+        <rdf:RDF>
+            <cc:Work rdf:about="">
+                <dc:format>image/svg+xml</dc:format>
+                <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+                <dc:title>Material Design Icons [Action Set]</dc:title>
+                <dc:date>2015-02-18</dc:date>
+                <dc:creator>
+                    <cc:Agent>
+                        <dc:title>Google</dc:title>
+                    </cc:Agent>
+                </dc:creator>
+                <dc:rights>
+                    <cc:Agent>
+                        <dc:title>Open Source</dc:title>
+                    </cc:Agent>
+                </dc:rights>
+                <dc:language>English</dc:language>
+
+                <dc:source>https://github.com/google/material-design-icons</dc:source>
+                <dc:description>Material Design Icons are the official open-source icons featured in the Google Material Design specification.</dc:description>
+            </cc:Work>
+        </rdf:RDF>
+    </metadata>
+
+    <defs>
+
+    <symbol id="aquarius" viewBox="0 0 8.433 5.502">
+      <title>aquarius</title>
+      <path d="m32.222 453.01 4.3-2.504 1.181 2.031 3.45-1.937 1.086 2.032 3.685-2.174 1.512 2.599m-15.214 6.614 4.3-2.504 1.181 2.032 3.45-1.937 1.086 2.031 3.685-2.173 1.512 2.599" transform="translate(-16.91 -237.983) scale(.52917)"/>
+    </symbol>
+    <symbol id="aries" viewBox="0 0 8.384 8.411">
+      <title>aries</title>
+      <path d="M-25.508 380.054c-1.247-4.708.323-5.658 3.341-4.677 2.748 3.256 2.738 8.966 3.475 13.898.235-4.976.665-10.184 3.34-13.765 3.347-2.15 4.461.817 3.475 4.277" transform="translate(14.106 -197.951) scale(.52917)"/>
+    </symbol>
+    <symbol id="cancer" viewBox="0 0 8.544 6.208">
+      <title>cancer</title>
+      <g transform="translate(-32.551 -198.905) scale(.52917)"><circle cx="64.963" cy="380.187" r="2.599"/><circle cx="73.783" cy="383.395" r="2.599"/><path d="M77.125 378.108c-4.38-2.38-8.872-2.091-13.43-.2m11.785 7.484c-4.38 2.38-8.871 2.09-13.43.2"/></g>
+    </symbol>
+    <symbol id="capricorn" viewBox="0 0 8.594 8.22">
+      <title>capricorn</title>
+      <path d="M2.93 447.954c3.443-.748 2.557 4.498 2.976 7.938.565-2.343.385-5.857 1.748-6.946 1.45-1.65 2.026-1.094 2.882.378.378 9.68.311 7.185 1.323 8.694 2.698 2.538 5.608 2.057 6.237-.85-.211-1.534-2.096-4.596-5.103-1.796-1.045 1.412-1.05 6.823-5.906 6.993" transform="translate(-1.266 -236.728) scale(.52917)"/>
+    </symbol>
+    <symbol id="gemni" viewBox="0 0 8.23 8.418">
+      <title>gemni</title>
+      <path d="M32.624 374.18c4.81 1.56 9.621 1.092 14.432 0m-10.691 1.063v12.963m7.214-12.963v12.963m3.43.819c-4.81-1.562-9.622-1.094-14.433 0" transform="translate(-16.954 -197.722) scale(.52917)"/>
+    </symbol>
+    <symbol id="leo" viewBox="0 0 7.013 8.073">
+      <title>leo</title>
+      <g transform="translate(13.315 -217.27) scale(.52917)"><circle cx="-22.033" cy="420.011" r="2.599"/><path d="M-20.386 417.901a4.09 4.09 0 0 1-1.026-2.71 4.09 4.09 0 0 1 4.09-4.09 4.09 4.09 0 0 1 4.09 4.09v0a4.09 4.09 0 0 1-1.115 2.806"/><path d="M-12.445 424.736a2.6 2.6 0 0 1-1.637.58c-1.435 0-2.63-1.164-2.6-2.6.034-1.6 2.907-5.276 3.32-6.453"/></g>
+    </symbol>
+    <symbol id="libra" viewBox="0 0 9.081 7.318">
+      <title>libra</title>
+      <path d="M36.973 419.733a4.477 4.477 0 0 1-1.516-3.358 4.477 4.477 0 0 1 4.477-4.477 4.477 4.477 0 0 1 4.477 4.477v0a4.477 4.477 0 0 1-1.518 3.36" transform="translate(-16.593 -217.634) scale(.52917)"/><path d="M42.893 419.864h5.08m-16.08-.039h5.08m-5.046 4.752H47.98" transform="translate(-16.593 -217.634) scale(.52917)"/>
+    </symbol>
+    <symbol id="pisces" viewBox="0 0 6.457 8.364">
+      <title>pisces</title>
+      <path d="M63.227 454.935H74.96v.378" transform="translate(-33.458 -236.475) scale(.52917)"/><path d="M64.161 447.406c2.431 4.392 4.677 8.83.134 14.967m10.169-15.235c-2.43 4.393-4.677 8.832-.134 14.968" transform="translate(-33.458 -236.475) scale(.52917)"/>
+    </symbol>
+    <symbol id="sagitarius" viewBox="0 0 6.662 6.715">
+      <title>sagitarius</title>
+      <path d="m-24.387 460.778 11.413-11.505m-6.554-.239 7.313-.043m-.529-.495.042 7.313m-10.896-2.447 6.36 6.468" transform="translate(13.104 -237.31) scale(.52917)"/>
+    </symbol>
+    <symbol id="scorpio" viewBox="0 0 8.028 9.945">
+      <title>scorpio</title>
+      <path d="M63.351 412.323v11.189m4.733-11.139v11.189" transform="translate(-32.54 -216.062) scale(.52917)"/><path d="m72.683 413.517-.024 11.524c.11 1.052 1.507 2.136 3.496 1.22" transform="translate(-32.54 -216.062) scale(.52917)"/><path d="M62.028 408.874c.924 1.197 1.407 3.056 1.323 5.764 3.39-10.537 3.704-3.916 4.867-2.031 1.992-3.797 4.314-7.11 4.583 3.024" transform="translate(-32.54 -216.062) scale(.52917)"/>
+    </symbol>
+    <symbol id="taurus" viewBox="0 0 8.795 8.295">
+      <title>taurus</title>
+      <g transform="translate(-1.231 -197.883) scale(.52917)"><path d="M2.957 374.842c1.514.648 3.029.772 4.543 4.143 1.87 1.523 4.1 1.416 6.682-.268.987-2.364 2.444-3.555 4.143-4.142v.4"/><circle cx="10.641" cy="384.531" r="4.477"/></g>
+    </symbol>
+    <symbol id="virgo" viewBox="0 0 8.389 10.196">
+      <title>virgo</title>
+      <path d="M4.82 412.991v11.19m4.732-11.14v11.189" transform="translate(-1.568 -216.416) scale(.52917)"/><path d="m14.15 414.185-.023 11.525c.11 1.051.61 1.52 1.087 2.022" transform="translate(-1.568 -216.416) scale(.52917)"/><path d="M3.496 409.542c.924 1.197 1.407 3.056 1.323 5.765 3.39-10.538 3.704-3.917 4.867-2.032 1.992-3.796 4.314-7.11 4.583 3.024 1.338-2.376 3.197-5.577 4.016.708-.346 7.746-7.465 9.828-7.465 9.828" transform="translate(-1.568 -216.416) scale(.52917)"/><path d="M3.496 409.542c.924 1.197 1.407 3.056 1.323 5.765 3.39-10.538 3.704-3.917 4.867-2.032 1.992-3.796 4.314-7.11 4.583 3.024 1.338-2.376 3.197-5.577 4.016.708-.346 7.746-7.465 9.828-7.465 9.828" transform="translate(-1.568 -216.416) scale(.52917)"/>
+    </symbol>
+    </defs>
+</svg>
