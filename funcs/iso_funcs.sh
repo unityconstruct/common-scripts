@@ -26,7 +26,7 @@ _process_iso_mkiso_absolute_path() {
 	local __destdir="${6}"
     
 	local __isoname="${__fname}.iso"
-    _log "CREATING ISO IMAGE: VOLUME:[${__volname}] -- FOLDER:[${__fullpath}] -- ISO FILENAME:[${__destdir}/${__isofile}]" | tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
+    _log "CREATING ISO IMAGE: VOLUME:[${__volname}] -- FOLDER:[${__fullpath}] -- ISO FILENAME:[${__destdir}/${__isofile}]"  #| tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
     mkisofs -lJR -pad -input-charset "utf-8" -V "${__volname}" -o "${__destdir}/${__isofile}" "${__fullpath}/"
     # save error code from command
 	status=$?;
@@ -52,17 +52,17 @@ _process_iso_mkiso() {
 	local __dest_base_folder="${5}"
     
 	local __isoname="${__fname}.iso"
-    echo "CREATING ISO IMAGE: VOLUME:[${__volname}] -- FOLDER:[${__src_base_dir}/${__src_folder}] -- ISO FILENAME:[${__dest_base_folder}/${__isoname}]" | tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
+    echo "CREATING ISO IMAGE: VOLUME:[${__volname}] -- FOLDER:[${__src_base_dir}/${__src_folder}] -- ISO FILENAME:[${__dest_base_folder}/${__isoname}]" # | tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
     mkisofs -lJR -pad -input-charset "utf-8" -V "${__volname}" -o "${__dest_base_folder}/${__isoname}" "${__src_base_dir}/${__src_folder}/"
     # save error code from command
 	status=$?;
    	# if rip fails, rename iso then try to tar it
     if [ ${status} -ne 0 ] ; then
-        echo "[#$_counter]FAILED!! STATUS:[${status}] :: CREATING ISO IMAGE: VOLUMNE:[${__volname}] -- FOLDER:[${__src_base_dir}/${__src_folder}] -- ISO FILENAME:[${__dest_base_folder}/${__isoname}]" \
-        | tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
+        echo "[#$_counter]FAILED!! STATUS:[${status}] :: CREATING ISO IMAGE: VOLUMNE:[${__volname}] -- FOLDER:[${__src_base_dir}/${__src_folder}] -- ISO FILENAME:[${__dest_base_folder}/${__isoname}]"
+        # | tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
     else
-        echo "[#$_counter]SUCCESS: STATUS:[${status}] :: CREATING ISO IMAGE: VOLUMNE:[${__volname}] -- FOLDER:[${__src_base_dir}/${__src_folder}] -- ISO FILENAME:[${__dest_base_folder}/${__isoname}]" \
-        | tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
+        echo "[#$_counter]SUCCESS: STATUS:[${status}] :: CREATING ISO IMAGE: VOLUMNE:[${__volname}] -- FOLDER:[${__src_base_dir}/${__src_folder}] -- ISO FILENAME:[${__dest_base_folder}/${__isoname}]"
+        #| tee -a "${SRC_BASE_DIR}/${FOLDER_LOG}"
     fi
 }
 
@@ -128,13 +128,13 @@ _process_testiso_umountimg () {
     fi
 }
 
-
 #-----------------------------------------------------------------------
 # DD RIP FUNCS
 #-----------------------------------------------------------------------
 
 ## display block devices, then enter # for cdrom [sr_] its
  #
+#DRIVE=
 _dd_cdrom_select_dev() {
 	echo "listing devices"
 	lsblk
@@ -165,7 +165,6 @@ _dd_cdrom_show_isosize_values () {
   echo "blocksize : [${_blocksize}]"
 }
 
-
 ## use dd to image a cdrom disc device
  # function signature
  # _dd_device_to_file ${_drive}${_dstdir}${_isoname}${_blocksize}
@@ -195,7 +194,6 @@ _ripdiscs() {
 	_ripdisc $@
 #TODO: NEEDS TESTING
 _ripdiscs_again $@ 
-
 }
 
 ## prompt to ripping another disc
@@ -324,7 +322,6 @@ _ripdisc () {
 	# attempt to eject disc
 	_cdrom_eject ${_drive}
 }
-
 
 #-----------------------------------------------------------------------
 # ABCDE FUNCS
@@ -515,9 +512,9 @@ _tardisc () {
 	echo "Taring files to:[${_dstdir}/${_tarname}.tar]"
     cd ${_mountpoint}
     echo "tar -cv --ignore-failed-read  --directory=${_mountpoint} -f ${_dstdir}/${_tarname}.tar *   "
-	tar -cv --ignore-failed-read   -f ${_dstdir}/${_tarname}  *     | tee ${_dstdir}/${_LOG}
+	tar -cv --ignore-failed-read   -f ${_dstdir}/${_tarname}  *     #| tee ${_dstdir}/${_LOG}
     cd ..
-    chmod 777 ${_dstdir}/*.tar                                      | tee ${_dstdir}/${_LOG}
+    chmod 777 ${_dstdir}/*.tar                                      #| tee ${_dstdir}/${_LOG}
 
     # device might be automounted elsehere by the OS, so unmount using the device handle
     _dev_unmount ${_drive}                          # _unmount_disc ${_drive} ${_mountpoint}
@@ -546,7 +543,6 @@ _tardisc () {
 
     _cdrom_eject ${_drive}
 }
-
 
 #-----------------------------------------------------------------------
 # COPY FUNCS
@@ -582,11 +578,8 @@ _copy_disc () {
     _log "volname    : [${_volname}]"
     _log ----------------------------------
 	
-	# _log "creating:[${_dstdir}/${_volname}]";
-	# mkdir -p ${_dstdir}/${_volname}                                 # create new folder and enter it
 	_log "-----------------------"
 	_log "Copying entire disk to [${_dstdir}/${_volname}]: starting..."
-	# cd ${_mountpoint}
     cp -r "${_mountpoint}" "${_dstdir}/${_volname}"                    # copy mountpoint to temp dir
     _log "Copying entire disk to [${_dstdir}/${_volname}]: Done."
     _log "setting perms to 777 on: [${_volname}]"
@@ -656,9 +649,6 @@ _dev_unmount () {
 	sudo umount ${_drive}
 }
 
-
-
-
 #-----------------------------------------------------------------------
 # PENDING FUNCS
 #-----------------------------------------------------------------------
@@ -669,5 +659,4 @@ _dev_unmount () {
 #   do 
 #     oggenc "${t}" -q 6 -o "${t}.ogg"
 #   done
-
 # }

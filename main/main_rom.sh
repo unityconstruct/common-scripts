@@ -6,100 +6,74 @@ echo "[main][framworkpath:${FRAMEWORKPATH}][Testing Timestamp:$(getTimestamp)]"
 # Vars
 DSTDIR=/tmp/rom
 STORDIR=/media/media1/iso
-FNAME=disc.iso
-tardir=disc
 DRIVE=/dev/sr0
 blocksize=2048
+# FNAME=disc.iso
 
 
+_show_paths () {
+  echo "---------------------"
+  echo "DSTDIR :[${DSTDIR}]"
+  echo "STORDIR :[${STORDIR}]"
+  echo "DRIVE:[${DRIVE}]"
+  echo "---------------------"
+}
 
-__menu () {
+_menu_romcopy () {
 	echo ""
-	__show_paths
-	echo '
----------------------
-[1] change temp dest dir
-[2] change remote store dir
-[3] make iso images
-[4] rip audio cd
-[5] copy disc to folder
---------------------- 
-[x] exit
----------------------
-[g] GO
----------------------
-'        
+	_show_paths
+	echo '---------------------
+ [1] change temp dest dir
+ [2] change remote store dir
+ [3] COPY: copy-many
+ [4] abcde rip (audio/cda media)
+ [r] ISO: rip-many
+ [t] TAR: rip-single
+ [s] TAR: rip-many
+ --------------------- 
+ [x] exit
+ ---------------------
+ [g] GO
+ ---------------------'        
 	local __resp=
 	read -p "Enter selection: " __resp
 	echo "Typed: [${__resp}]"
 	opt="${__resp}"
 
 	case "${opt}" in
-	# "1") echo "change temp dest dir"   ; __set_temp_destdir ;;
-	"1") _get_user_resp "Enter temp dest dir [ex: /var/tmp/rom/]"; DSTDIR="${__DATA}";;
-	# "2") echo "change remote store dir"; __set_stordir ;;
-	"2") "Enter remote storage dir [ex: /media/media3/cds]"; STORDIR="${__DATA}";;
-	"3") echo "copy data cd to..."       ; 
-	_copy_disc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR} 
-	;;
-	
-	# ${_drive} ${_dstdir} ${_mountpoint} ${_stordir} ${_volname}
-
-	# "3") echo "copy data cd to..."       ; __copy_disc ;;
-
-	#TESTED
-	# "4") echo "rip audio cd to..."       ; _abcde_discs ;;
+	"1") _get_user_resp "Enter temp dest dir [ex: /var/tmp/rom/]"          ; DSTDIR="${__DATA}";;
+	"2") _get_user_resp "Enter remote storage dir [ex: /media/media3/cds]" ; STORDIR="${__DATA}";;
+	"3") echo "copy data cd to..."; _copy_disc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR} ;;
 	"4") echo "rip audio cd to...";
 		_get_user_resp "Artist name: "; local _artistname=${__DATA}
 		_get_user_resp "Volume name: "; local _volname=${__DATA}
 		echo "_abcde_discs ${DRIVE} ${DSTDIR} ${STORDIR} ${_artistname} ${_volname}"
-		_abcde_discs ${DRIVE} ${DSTDIR} ${STORDIR} ${_artistname} ${_volname} "mp3,wav"
-		#_abcde_discs ${_drive} ${_destdir} ${_stordir} ${_artistname} ${_volname}
-		;;
-	# "F") _abcde_flac_encode ${DSTDIR} "VOL5" "ART5-VOL5" "mp3"
-	"F") cd "${DSTDIR}/VOL8"; _abcde_rename_move_flac "${DSTDIR}/VOL8" "ART8-VOL8" ;;
-	
-	"T") _tardisc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR} "TARNAME" ;;
-	"T2") _tardiscs ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR}  ;;
-
-
-
-	"x") echo "Exiting..."             ; exit 0 ;;
-	"g") echo "START!";
-	 _ripdiscs ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR}
-	#  _ripdiscs ${_drive} ${_dstdir} ${_mountpoint} ${_stordir}
-	;;
+		_abcde_discs ${DRIVE} ${DSTDIR} ${STORDIR} ${_artistname} ${_volname} "mp3,wav" ;;
+	"r") _ripdiscs ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR} ;;
+	"t") _tardisc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR} "TARNAME" ;;
+	"s") _tardiscs ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR}  ;;
+	"x") echo "Exiting..."; exit 0 ;;
 		*) ;;
 	esac
-	__menu
-
+	_menu_romcopy
 }
 
-		# "g") echo "START!"; ripdiscs ;;
-
-
-
-#
-# MAIN BLOCK
-#
+## main block ----------------------------------------------------
 echo "---------------------"
-echo "DestDir:[${DSTDIR}]"
-echo "StorDir:[${STORDIR}]"
+echo "PARAMS : [$@]"
+echo "DSTDIR :[${DSTDIR}]"
+echo "STORDIR:[${STORDIR}]"
+echo "DRIVE  :[$DRIVE]"
 echo "---------------------"
-
-# chgRomDrive
 _dd_cdrom_select_dev
 
-if [ -z "$1" ] ; then
-	__menu
-	#ripdiscs
-elif [ "$1" == "-t" ] ; then
+# option usages --------------------------------------------------
+if [ -z "$1" ] ; then                   # go to menu by default
+	_menu_romcopy
+elif [ "$1" == "-t" ] ; then            # TAR: rip-many-cli
 	echo "Using option [-t] for TARONLY"
-	tardiscs
-else 
-	volname="${1}"
-	FNAME="{$1}".iso
-	echo "using filename: [${FNAME}]"
-	_ripdisc
+	_tardiscs #${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR}  ;;
+else                                    # TAR: rip-single-clie
+  volname="${1}";  echo "ripdisc: [${DSTDIR}/mnt/${volname}]"
+	_ripdisc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR} ${volname} ;
 fi
-
