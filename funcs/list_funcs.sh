@@ -7,6 +7,21 @@
 #-----------------------------------------------------------------------
 
 
+## test func to echo passed param
+ #
+echopath() {
+  local _path="${1}"
+  echo "${_path}"
+}
+
+## 
+ #
+list_files() {
+  for f in $( find "." -name '*.*'   ); do echo $f; done;
+}
+
+
+
 ## List a Path's DIRECTORIES & save to text file
  #
 _create_folder_list () {
