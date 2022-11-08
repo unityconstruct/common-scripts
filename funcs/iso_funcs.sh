@@ -582,22 +582,24 @@ _copy_disc () {
     _log "volname    : [${_volname}]"
     _log ----------------------------------
 	
-	_log "creating:[${_dstdir}/${_volname}]";
-	mkdir -p ${_dstdir}/${_volname}                                 # create new folder and enter it
+	# _log "creating:[${_dstdir}/${_volname}]";
+	# mkdir -p ${_dstdir}/${_volname}                                 # create new folder and enter it
 	_log "-----------------------"
 	_log "Copying entire disk to [${_dstdir}/${_volname}]: starting..."
-	cp -r "${_mountpoint}" "${_dstdir}/${_volname}"                    # copy mountpoint to temp dir
-	_log "Copying entire disk to [${_dstdir}/${_volname}]: Done."
+	# cd ${_mountpoint}
+    cp -r "${_mountpoint}" "${_dstdir}/${_volname}"                    # copy mountpoint to temp dir
+    _log "Copying entire disk to [${_dstdir}/${_volname}]: Done."
+    _log "setting perms to 777 on: [${_volname}]"
+    sudo chmod -R 777 "${_dstdir}/${_volname}"
 
 	_log "-----------------------"
 	_log "OUTPUT:"
 	_log $(ls)
 	_log "-----------------------"
     _log "push to long term storage"
-	_log "Copying entire disk to [${_stordir}/${_volname}]: starting..."
-	_paused
-    _log "mv -r ${_dstdir}/${_volname} ${_stordir}/"
-    mv -r "${_dstdir}/${_volname}" "${_stordir}/"                   # push dir to remote
+	_log "move ${_dstdir}/${_volname} to [${_stordir}/${_volname}]: starting..."
+    _log "mv ${_dstdir}/${_volname} ${_stordir}/"
+    mv "${_dstdir}/${_volname}" "${_stordir}/"                   # push dir to remote
 
     status=$?                                                       # get status of move for error checking
     if [ ${status} -eq 0 ] ; then
@@ -605,8 +607,7 @@ _copy_disc () {
     else       
         _log "MOVE ERROR: Status[${status}] :: FROM:[${_dstdir}*.iso] TO:[${_stordir}]"
     fi
-
-	_log "Copying entire disk to [${_stordir}/${_volname}]: done..."
+	_log "move ${_dstdir}/${_volname} to [${_stordir}/${_volname}]: done."
 }
 
 ## call CLOSE on CDROM device, then wait 30s for disc to load
