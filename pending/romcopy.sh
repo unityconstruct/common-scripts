@@ -143,27 +143,27 @@ __logfile=romcopy.log
 # }
 
 
-__copy_disc () {
-	echo "copying data cd ${STORDIR}"
-	read -p "VolumeName: " resp
-	volname="${resp}"
-	discdir="${volname}"
-	echo "Creating:[${STORDIR}${volname}]";
-	close_drive
-	# create new folder and enter it
-	mkdir -p ${STORDIR}${volname}
-	# sudo apt install abcde flac mkcue eyed3 lame
-	echo "-----------------------"
-	echo "Copying entire disk to [${STORDIR}${volname}]: starting..."
-	cp "${DRIVE}" "${STORDIR}${volname}"
-	# abcde -d ${DRIVE} -k -L -1 -M -o flac # to rip the flac
-	echo "Copying entire disk to [${STORDIR}${volname}]: Done."
-	echo "-----------------------"
-	echo "OUTPUT:"
-	ls
-	echo "-----------------------"
-	_paused
-}
+# __copy_disc () {
+# 	echo "copying data cd ${STORDIR}"
+# 	read -p "VolumeName: " resp
+# 	volname="${resp}"
+# 	discdir="${volname}"
+# 	echo "Creating:[${STORDIR}${volname}]";
+# 	close_drive
+# 	# create new folder and enter it
+# 	mkdir -p ${STORDIR}${volname}
+# 	# sudo apt install abcde flac mkcue eyed3 lame
+# 	echo "-----------------------"
+# 	echo "Copying entire disk to [${STORDIR}${volname}]: starting..."
+# 	cp "${DRIVE}" "${STORDIR}${volname}"
+# 	# abcde -d ${DRIVE} -k -L -1 -M -o flac # to rip the flac
+# 	echo "Copying entire disk to [${STORDIR}${volname}]: Done."
+# 	echo "-----------------------"
+# 	echo "OUTPUT:"
+# 	ls
+# 	echo "-----------------------"
+# 	_paused
+# }
 
 # # abcde -o ogg,mp3 -V -L -d disc.flac # to rip ogg files from the flac.
 #   # -d ${DRIVE}
@@ -238,14 +238,14 @@ __copy_disc () {
 
 
 
-__cdadiscs () {
-  # sudo apt install vorbis-tools
-  for t in /path/to/mp3/dir/album-1/track{01..18}*.wav
-  do 
-    oggenc "${t}" -q 6 -o "${t}.ogg"
-  done
+# __cdadiscs () {
+#   # sudo apt install vorbis-tools
+#   for t in /path/to/mp3/dir/album-1/track{01..18}*.wav
+#   do 
+#     oggenc "${t}" -q 6 -o "${t}.ogg"
+#   done
 
-}
+# }
 
 # ##
 # ##  TARING FUNCTIONS
@@ -434,7 +434,13 @@ __menu () {
 	"1") _get_user_resp "Enter temp dest dir [ex: /var/tmp/rom/]"; DSTDIR="${__DATA}";;
 	# "2") echo "change remote store dir"; __set_stordir ;;
 	"2") "Enter remote storage dir [ex: /media/media3/cds]"; STORDIR="${__DATA}";;
-	"3") echo "copy data cd to..."       ; __copy_disc ;;
+	"3") echo "copy data cd to..."       ; 
+	_copy_disc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" ${STORDIR} 
+	;;
+	
+	# ${_drive} ${_dstdir} ${_mountpoint} ${_stordir} ${_volname}
+
+	# "3") echo "copy data cd to..."       ; __copy_disc ;;
 
 	#TESTED
 	# "4") echo "rip audio cd to..."       ; _abcde_discs ;;

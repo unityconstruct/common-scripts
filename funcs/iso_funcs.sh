@@ -201,7 +201,7 @@ _ripdiscs_again $@
 ## prompt to ripping another disc
  # 
 _ripdiscs_again() {
-    _log "[ripdiscs_again][$#:$@ ]"
+    echo "[ripdiscs_again][$#:$@ ]"
 	read -p "RIP another? : " resp
 	echo "Typed:[${resp}]"
 	if [ "${resp}" == "y" -o "${resp}" == "Y" ] ; then
@@ -239,7 +239,7 @@ _ripdisc () {
         _volname="${__DATA}"
     fi
     _isoname=${_volname}.iso                                            # update _isoname with [volname].iso
-    _close_drive
+    _cdrom_close ${_drive}
 	
     _log ----------------------------------
 	_log "drive    : [${_drive}]"
@@ -256,7 +256,7 @@ _ripdisc () {
     _dd_cdrom_device_to_file ${_drive} ${_dstdir} ${_isoname} ${blocksize}
 	# save error code from the dd rip
 	status=$?
-	_log "\nRIPSSTATUS: [${status}]\n"
+	_log "RIPSSTATUS: [${status}]"
 	if [ ${status} -eq 0 ] ; then
 		_log ""; _log ""
 		_log "************************"
@@ -322,7 +322,7 @@ _ripdisc () {
 	_log "************************"
 
 	# attempt to eject disc
-	_eject_drive
+	_cdrom_eject ${_drive}
 }
 
 
@@ -347,7 +347,7 @@ _abcde_discs () {
     local _types=${6}
 	local _discdir="${_artistname}-${_volname}"
 	local _flacname="${_volname}.flac"
-	_close_drive
+	_cdrom_close
 
 	echo "Creating:[${_destdir}/${_volname}]";
 	mkdir -p ${_destdir}/${_volname}		# create new folder
@@ -438,10 +438,6 @@ _abcde_rip () {
 	echo "-----------------------"
 }
 
-
-
-
-
 #-----------------------------------------------------------------------
 # TAR FUNCS
 #-----------------------------------------------------------------------
@@ -461,13 +457,9 @@ _tardiscs () {
     echo "passing params to _tardisc:[$@ ]"
 	_tardisc $@
 
-# echo "passing params to _taragain: [$@ ]"
-# _taragain $@
-# _taragain ${_drive} ${_dstdir} ${_mountpoint} ${_stordir}
-
 }
 
-##
+## prompt to tar another disc
  #
 _taragain () {
     echo "[taragain][$#:$@ ]"
@@ -485,24 +477,6 @@ _taragain () {
     _paused;
 
 }
-
-_ripdisc_dump_vars(){
-    _log "PARAM# : [$#]"
-    _log "PARAMS : [$@]"
-    # local _drive=${1}       # cdrom drive: /dev/sr0
-    # local _dstdir=${2}      # working dir: /tmp/rom
-    # local _mountpoint=${3}  # cdrom mount point : /tmp/rom/mnt
-    # local _stordir=${4}     # long term storage path to move finished backup to
-    # local _volname=${5}     # discname, _tarname will be derived with '.tar' extendion
-
-    # _log "drive     : "[${_drive}]
-    # _log "dstdir    : "[${_dstdir}]
-    # _log "mountpoint: "[${_mountpoint}]
-    # _log "stordir   : "[${_stordir}]
-    # _log "volname   : "[${_volname}]
-    # _log "isoname   : "[${_isoname}]
-    # _log "tarname   : "[${_tarname}]
-}
  
 ## create a tar from a mounted cdrom discMount DRIVE and create TAR from contents
  # func signature:
@@ -516,13 +490,9 @@ _tardisc () {
     local _volname=${5}     # discname, _tarname will be derived with '.tar' extendion
     local _tarname=""       # tarfile name with tar ext - intializing here
     echo "[tardisc][$@ ]"
-
-
-
     ## if volume name is passed from RIPDISC, append .tar to it
     ##  otherwise prompt for tarname directly
-    if [ -z "${_volname}" ]; then
-	  # prompt for filename, then rip to TAR
+    if [ -z "${_volname}" ]; then           # prompt for filename, then rip to TAR
       _get_user_resp "Type filename ('.tar' will be appended) : ";
       _tarname="${__DATA}.tar"
     else
@@ -537,71 +507,117 @@ _tardisc () {
 	_log "tarname  : [${_tarname}]"
     _log ----------------------------------
 
-
-    _dev_unmount ${_drive}      # _cdrom_umount ${_drive} ${_mountpoint}
-    _close_drive ${_drive}
+    _dev_unmount ${_drive}                          # _cdrom_umount ${_drive} ${_mountpoint}
+    _cdrom_close ${_drive}                          # close cdrom tray
     # device might be automounted elsehere by the OS, so unmount using the device handle
-    _cdrom_mount ${_drive} ${_mountpoint}   # now ok to try mount to specified mountpoint
-
-# SKIPPING CREATING TEMP DIR & TAR'ING DIRECT FROM DISC/MOUNTPOINT
-# echo "Creating tempdir: [${DSTDIR}/${_tempdir}]"
-# mkdir ${DSTDIR}/${_tempdir}
-
-# echo "Copying files FROM:[${DSTDIR}mnt/] :: TO:[${DSTDIR}/${_tempdir}]" 
-# cp -Rv ${_mountpoint}/* ${DSTDIR}/${_tempdir}/
-# sudo chmod -R 777 ${DSTDIR}/${_tempdir}
-
-# echo "sleeping 10s"; sleep 10
-
-
+    _cdrom_mount ${_drive} ${_mountpoint}           # now ok to try mount to specified mountpoint
 
 	echo "Taring files to:[${_dstdir}/${_tarname}.tar]"
     cd ${_mountpoint}
     echo "tar -cv --ignore-failed-read  --directory=${_mountpoint} -f ${_dstdir}/${_tarname}.tar *   "
-	tar -cv --ignore-failed-read   -f ${_dstdir}/${_tarname}  *    # | tee ${_dstdir}/${_LOG}
+	tar -cv --ignore-failed-read   -f ${_dstdir}/${_tarname}  *     | tee ${_dstdir}/${_LOG}
     cd ..
-    chmod 777 ${_dstdir}/*.tar                                          # | tee ${_dstdir}/${_LOG}
+    chmod 777 ${_dstdir}/*.tar                                      | tee ${_dstdir}/${_LOG}
 
     # device might be automounted elsehere by the OS, so unmount using the device handle
-    _dev_unmount ${_drive}      # _unmount_disc ${_drive} ${_mountpoint}
+    _dev_unmount ${_drive}                          # _unmount_disc ${_drive} ${_mountpoint}
         
-    echo "Done, Listing local tars: [${_dstdir}/*.tar]..."
+    _log "Done, Listing local tars: [${_dstdir}/*.tar]..."
     ls -la ${_dstdir}/*.tar
 
 	# MOVING TAR to remote folder
-	echo "Moving FROM:[${_dstdir}/*.tar] TO:[${_stordir}]..."
+	_log "Moving FROM:[${_dstdir}/*.tar] TO:[${_stordir}]..."
 	mv ${_dstdir}/*.tar ${_stordir}
 	status=$?
 	if [ ${status} -eq 0 ] ; then
-		echo "Move SUCCESS"
+		_log "Move SUCCESS"
 	else       
-		echo "Move ERROR: Status[${status}] ";
+		_log "Move ERROR: Status[${status}] ";
 	fi
 
 	_log "Done."
     _log "local tars..."
-	echo "[${_dstdir}/*.tar]"
+	_log "[${_dstdir}/*.tar]"
 	ls -la ${_dstdir}/*.tar
 
     _log "remote tars..."
-	echo "[${_stordir}/*.tar]"
+	_log "[${_stordir}/*.tar]"
 	ls -la ${_stordir}/*.tar
 
-    _eject_drive
+    _cdrom_eject ${_drive}
 }
 
 
+#-----------------------------------------------------------------------
+# COPY FUNCS
+#-----------------------------------------------------------------------
+_copy_disc () {
+    local _drive=${1}       # cdrom drive: /dev/sr0
+    local _dstdir=${2}      # working dir: /tmp/rom
+    local _mountpoint=${3}  # cdrom mount point : /tmp/rom/mnt
+    local _stordir=${4}     # long term storage path to move finished backup to
+    local _volname=${5}     # discname, _tarname will be derived with '.tar' extendion
+    echo "[copy_disc][$@ ]"
+
+    _log "Add disc to drive!"
+    _dev_unmount ${_drive}                          # _cdrom_umount ${_drive} ${_mountpoint}
+    ## if volume name is passed from RIPDISC, append .iso to it
+     #  otherwise prompt for _volname directly
+    if [ "$#" = "4" -o -z "${_volname}" ]; then
+        _log "VOLNAME IS empty: [${_volname} ]"                         # prompt for filename
+        _get_user_resp "Type volume name (folder will be created) : "
+        _volname="${__DATA}"
+    fi
+
+    _cdrom_close ${_drive}                          # close cdrom tray
+    # device might be automounted elsehere by the OS, so unmount using the device handle
+    _cdrom_mount ${_drive} ${_mountpoint}           # now ok to try mount to specified mountpoint
+
+    _log "Creating:[${_dstdir}/${_volname}]";
+    _log ----------------------------------
+	_log "drive      : [${_drive}]"
+	_log "dstdir     : [${_dstdir}]"
+	_log "mountpoint : [${_mountpoint}]"
+	_log "stordir    : [${_stordir}]"
+    _log "volname    : [${_volname}]"
+    _log ----------------------------------
+	
+	_log "creating:[${_dstdir}/${_volname}]";
+	mkdir -p ${_dstdir}/${_volname}                                 # create new folder and enter it
+	_log "-----------------------"
+	_log "Copying entire disk to [${_dstdir}/${_volname}]: starting..."
+	cp -r "${_mountpoint}" "${_dstdir}/${_volname}"                    # copy mountpoint to temp dir
+	_log "Copying entire disk to [${_dstdir}/${_volname}]: Done."
+
+	_log "-----------------------"
+	_log "OUTPUT:"
+	_log $(ls)
+	_log "-----------------------"
+    _log "push to long term storage"
+	_log "Copying entire disk to [${_stordir}/${_volname}]: starting..."
+	_paused
+    _log "mv -r ${_dstdir}/${_volname} ${_stordir}/"
+    mv -r "${_dstdir}/${_volname}" "${_stordir}/"                   # push dir to remote
+
+    status=$?                                                       # get status of move for error checking
+    if [ ${status} -eq 0 ] ; then
+        _log "MOVE SUCCESS :: FROM:[${_dstdir}*.iso] TO:[${_stordir}]"
+    else       
+        _log "MOVE ERROR: Status[${status}] :: FROM:[${_dstdir}*.iso] TO:[${_stordir}]"
+    fi
+
+	_log "Copying entire disk to [${_stordir}/${_volname}]: done..."
+}
+
 ## call CLOSE on CDROM device, then wait 30s for disc to load
  #
-_close_drive () {
+_cdrom_close () {
     local _drive=${1}
     local _wait=${2}
-
     if [ -z "${_wait}" ]; then      # if no wait is passed, use a default
         _wait=30
     fi
-
-	echo "loading disc tray & waiting [${_wait}] seconds"
+	_log "loading disc tray & waiting [${_wait}] seconds"
 	 eject -t ${drive} 
      sleep ${_wait}
 }
@@ -609,9 +625,10 @@ _close_drive () {
 ## wait for a bit, the eject CDROM device
  # wait is to allow media to spin down
  #
-_eject_drive () {
+_cdrom_eject () {
+    local _drive=${1}
 	sleep 10
-	eject ${drive}
+	eject ${_drive}
 }
 
 ##
@@ -619,7 +636,7 @@ _eject_drive () {
 _cdrom_mount(){
     local _drive=${1}
     local _mountpoint=${2}
-	echo "Mounting disc:[${_drive}]"
+	_log "Mounting disc:[${_drive}]"
 	sudo mount ${_drive} ${_mountpoint}
 }
 
@@ -628,14 +645,28 @@ _cdrom_mount(){
 _cdrom_unmount () {
     local _drive=${1}
     local _mountpoint=${2}
-	echo "UnMounting disc:[${_drive}]"
+	_log "UnMounting disc:[${_drive}]"
 	sudo umount ${_mountpoint}
 }
 
 _dev_unmount () {
     local _drive=${1}
-	echo "UnMounting disc:[${_drive}]"
+	_log "UnMounting disc:[${_drive}]"
 	sudo umount ${_drive}
 }
 
 
+
+
+#-----------------------------------------------------------------------
+# PENDING FUNCS
+#-----------------------------------------------------------------------
+
+# _cdadiscs () {
+#   # sudo apt install vorbis-tools
+#   for t in /path/to/mp3/dir/album-1/track{01..18}*.wav
+#   do 
+#     oggenc "${t}" -q 6 -o "${t}.ogg"
+#   done
+
+# }
