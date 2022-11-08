@@ -216,7 +216,8 @@ _doagain() {
 
 }
 
-##  ISO FUNCTIONS
+## rip cdrom device at low level with 'dd'
+ #
 _ripdisc () {
 	# rip to filename specificed in CLI call
 	echo "stordir  : [${stordir}]"      # 
@@ -277,7 +278,23 @@ _ripdisc () {
 		echo "[${stordir}/${fname}]"
 	    ls -la ${stordir}/${fname}
 		echo "TAR'ing disc now...";
-		tardisc
+
+
+
+
+
+		_tardisc
+
+
+
+
+
+
+
+
+
+
+
 	fi
 	echo "************************"
 	echo "Done with disc. Listing destination iso/tars: "[${DSTDIR}/*.iso/tar]
@@ -288,24 +305,12 @@ _ripdisc () {
 
 	# attempt to eject disc
 	_eject_drive
-
 }
-
 
 
 #-----------------------------------------------------------------------
 # ABCDE FUNCS
 #-----------------------------------------------------------------------
-
-
-
-# _adcde_discs_prompts(){
-# 	# setup vars
-# 	read -p "VolumeName: " volname		# volname="${resp}"
-# 	read -p "ArtistName: " artistname	# artistname="${resp}"
-
-
-# }
 
 # abcde -o ogg,mp3 -V -L -d disc.flac # to rip ogg files from the flac.
   # -d ${drive}
@@ -322,11 +327,10 @@ _abcde_discs () {
     local _artistname=${4}
     local _volname=${5}
     local _types=${6}
-
-    #${_drive} ${_destdir} ${_stordir} ${_artistname} ${_volname}
 	local _discdir="${_artistname}-${_volname}"
 	local _flacname="${_volname}.flac"
 	_close_drive
+
 	echo "Creating:[${_destdir}/${_volname}]";
 	mkdir -p ${_destdir}/${_volname}		# create new folder
 	cd ${_destdir}/${_volname}				# and enter it
@@ -339,7 +343,6 @@ _abcde_discs () {
 
 	cd ${_destdir}						                 # return to working dir
 	echo "Moving ${_destdir}/${_volname} TO ${_stordir}"
-    _paused
     mv ${_destdir}/${_volname} ${_stordir}               # move to perm storage
 
 	_doagain                                             # prompt for next iteration
@@ -418,57 +421,156 @@ _abcde_rip () {
 }
 
 
-# _abcde_flac_encode_prep () {
-#     local _artistname=${1}
-#     local _volname=${2}
-# 	# setup vars
-# 	read -p "VolumeName: " volname		# volname="${resp}"
-# 	read -p "ArtistName: " artistname	# artistname="${resp}"
-# 	discdir="${_artistname}-${_volname}"
-# 	flacname="${_volname}.flac"
-# 	_close_drive
-# }
 
 
 
+#-----------------------------------------------------------------------
+# TAR FUNCS
+#-----------------------------------------------------------------------
 
+##
+ #
+tardiscs () {
+	# prompt for filename, then rip to TAR
+	echo "Type filename ( '.tar' will be appended) :";
+	read -p "Filename: " resp;
+	fname="${resp}".tar
+	tardir="${resp}"
+	echo "Creating:[${DSTDIR}/${fname}]";
+	tardisc
+	taragain
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-_close_drive () {
-	echo "loading disc tray"
-	 eject -t ${drive} 
-     sleep 30
-	# echo "Press ENTER when ready"
-	# _paused
 }
 
+##
+ #
+taragain () {
+    # prompt for ripping another 
+    read -p "TAR another? : " resp
+    echo "Typed:[${resp}]"
+    if [ "${resp}" == "y" -o "${resp}" == "Y" ] ; then
+        echo "tar-ing another"
+        tardiscs;
+    else 
+        echo "exiting"
+        exit 0;
+    fi
+    _paused;
+
+}
+
+
+# Mount DRIVE and create TAR from contents
+ # _tardisc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" "TARNAME" ${STORDIR} ;;
+ #
+_tardisc () {
+    local _drive=${1}
+    local _dstdir=${2}
+    local _mountpoint=${3}
+    local _tarname=${4}
+    local _stordir=${5}
+    
+    _dev_unmount ${_drive}      # _cdrom_umount ${_drive} ${_mountpoint}
+    _close_drive ${_drive}
+    # device might be automounted elsehere by the OS, so unmount using the device handle
+    _cdrom_mount ${_drive} ${_mountpoint}   # now ok to try mount to specified mountpoint
+
+# SKIPPING CREATING TEMP DIR & TAR'ING DIRECT FROM DISC/MOUNTPOINT
+# echo "Creating tempdir: [${DSTDIR}/${_tempdir}]"
+# mkdir ${DSTDIR}/${_tempdir}
+
+# echo "Copying files FROM:[${DSTDIR}mnt/] :: TO:[${DSTDIR}/${_tempdir}]" 
+# cp -Rv ${_mountpoint}/* ${DSTDIR}/${_tempdir}/
+# sudo chmod -R 777 ${DSTDIR}/${_tempdir}
+
+# echo "sleeping 10s"; sleep 10
+
+
+
+    # echo "Taring files to:[${DSTDIR}${_tempdir}.tar]"
+    # cd ${DSTDIR}/${_tempdir}
+    # tar -cv --ignore-failed-read -f ${DSTDIR}/${_tempdir}.tar * | tee ${_LOG}
+    # chmod 777 ${DSTDIR}/${_tempdir}.tar  | tee ${_LOG}
+    # cd ..
+	echo "Taring files to:[${_dstdir}/${_tarname}.tar]"
+    cd ${_mountpoint}
+    echo "tar -cv --ignore-failed-read  --directory=${_mountpoint} -f ${_dstdir}/${_tarname}.tar *   "
+	tar -cv --ignore-failed-read   -f ${_dstdir}/${_tarname}.tar  *     | tee ${_dstdir}${_LOG}
+    cd ..
+    chmod 777 ${DSTDIR}/*.tar                                           | tee ${_dstdir}${_LOG}
+
+    # device might be automounted elsehere by the OS, so unmount using the device handle
+    _dev_unmount ${_drive}      # _unmount_disc ${_drive} ${_mountpoint}
+        
+    echo "Done, Listing local tars: [${_dstdir}/*.tar]..."
+    ls -la ${_dstdir}/*.tar
+
+	# MOVING TAR to remote folder
+	echo "Moving FROM:[${_dstdir}/*.tar] TO:[${_stordir}]..."
+	mv ${_dstdir}/*.tar ${_stordir}
+	status=$?
+	if [ ${status} -eq 0 ] ; then
+		echo "Move SUCCESS"
+	else       
+		echo "Move ERROR: Status[${status}] ";
+	fi
+
+	_log "Done."
+    _log "local tars..."
+	echo "[${_dstdir}/*.tar]"
+	ls -la ${_dstdir}/*.tar
+
+    _log "remtoe tars..."
+	echo "[${_stordir}/*.tar]"
+	ls -la ${_stordir}/*.tar
+
+    _eject_drive
+}
+
+
+## call CLOSE on CDROM device, then wait 30s for disc to load
+ #
+_close_drive () {
+    local _drive=${1}
+    local _wait=${2}
+
+    if [ -z "${_wait}" ]; then      # if no wait is passed, use a default
+        _wait=30
+    fi
+
+	echo "loading disc tray & waiting [${_wait}] seconds"
+	 eject -t ${drive} 
+     sleep ${_wait}
+}
+
+## wait for a bit, the eject CDROM device
+ # wait is to allow media to spin down
+ #
 _eject_drive () {
-	#echo "Ejecting Drive after 3 seconds"
 	sleep 10
 	eject ${drive}
+}
+
+##
+ #
+_cdrom_mount(){
+    local _drive=${1}
+    local _mountpoint=${2}
+	echo "Mounting disc:[${_drive}]"
+	sudo mount ${_drive} ${_mountpoint}
+}
+
+##
+ #
+_cdrom_unmount () {
+    local _drive=${1}
+    local _mountpoint=${2}
+	echo "UnMounting disc:[${_drive}]"
+	sudo umount ${_mountpoint}
+}
+
+_dev_unmount () {
+    local _drive=${1}
+	echo "UnMounting disc:[${_drive}]"
+	sudo umount ${_drive}
 }

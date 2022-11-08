@@ -247,77 +247,71 @@ __cdadiscs () {
 
 }
 
-##
-##  TARING FUNCTIONS
-##
+# ##
+# ##  TARING FUNCTIONS
+# ##
 
-tardiscs () {
-	# prompt for filename, then rip to TAR
-	echo "Type filename ( '.tar' will be appended) :";
-	read -p "Filename: " resp;
-	fname="${resp}".tar
-	tardir="${resp}"
-	echo "Creating:[${DSTDIR}/${fname}]";
-	tardisc
-	taragain
+# tardiscs () {
+# 	# prompt for filename, then rip to TAR
+# 	echo "Type filename ( '.tar' will be appended) :";
+# 	read -p "Filename: " resp;
+# 	fname="${resp}".tar
+# 	tardir="${resp}"
+# 	echo "Creating:[${DSTDIR}/${fname}]";
+# 	tardisc
+# 	taragain
 
-}
+# }
 
-unmount_disc () {
-	echo "UnMounting disc:[${DRIVE}]"
-	sudo umount ${DSTDIR}/mnt
 
-}
+# # Mount DRIVE and create TAR from contents
+# #
+# tardisc () {
+#  _cdrom_mount ${DRIVE} ${DSTDIR}/mnt
 
-# Mount DRIVE and create TAR from contents
-#
-tardisc () {
-	echo "Mounting disc:[${DRIVE}]"
-	sudo mount ${DRIVE} ${DSTDIR}/mnt
+# 	echo "Creating [${DSTDIR}/${tardir}]"
+# 	mkdir ${DSTDIR}/${tardir}
 
-	echo "Creating [${DSTDIR}/${tardir}]"
-	mkdir ${DSTDIR}/${tardir}
+# 	echo "Copying files FROM:[${DSTDIR}mnt/] :: TO:[${DSTDIR}/${tardir}]" 
+# 	cp -Rv ${DSTDIR}mnt/* ${DSTDIR}/${tardir}/
+# 	sudo chmod -R 777 ${DSTDIR}/${tardir}
 
-	echo "Copying files FROM:[${DSTDIR}mnt/] :: TO:[${DSTDIR}/${tardir}]" 
-	cp -Rv ${DSTDIR}mnt/* ${DSTDIR}/${tardir}/
-	sudo chmod -R 777 ${DSTDIR}/${tardir}
+# 	echo "sleeping 10s"
+# 	sleep 10
 
-	echo "sleeping 10s"
-	sleep 10
+# 	echo "Taring files to:[${DSTDIR}${tardir}.tar]"
+# 	cd ${DSTDIR}${tardir}
+# 	tar -cvf ${DSTDIR}/${tardir}.tar * | tee ${_LOG}
+# 	chmod 777 ${DSTDIR}/${tardir}.tar  | tee ${_LOG}
+# 	cd ..
 
-	echo "Taring files to:[${DSTDIR}${tardir}.tar]"
-	cd ${DSTDIR}${tardir}
-	tar -cvf ${DSTDIR}/${tardir}.tar * | tee ${_LOG}
-	chmod 777 ${DSTDIR}/${tardir}.tar  | tee ${_LOG}
-	cd ..
-
-	unmount_disc
+# 	_unmount_disc ${DSTDIR}/mnt
 			
-	echo "Done, Listing local tars: [${DSTDIR}*.tar]..."
-	ls -la ${DSTDIR}/*.tar
+# 	echo "Done, Listing local tars: [${DSTDIR}*.tar]..."
+# 	ls -la ${DSTDIR}/*.tar
 			
-	#
-	# MOVING TAR to remote folder
-	#
-	echo "Moving FROM:[${DSTDIR}*.tar] TO:[${STORDIR}]..."
-	mv ${DSTDIR}/*.tar ${STORDIR}
-	status=$?
-	if [ ${status} -eq 0 ] ; then
-		echo "Move SUCCESS"
-	else       
-		echo "Move ERROR: Status[${status}] ";
-	fi
+# 	#
+# 	# MOVING TAR to remote folder
+# 	#
+# 	echo "Moving FROM:[${DSTDIR}*.tar] TO:[${STORDIR}]..."
+# 	mv ${DSTDIR}/*.tar ${STORDIR}
+# 	status=$?
+# 	if [ ${status} -eq 0 ] ; then
+# 		echo "Move SUCCESS"
+# 	else       
+# 		echo "Move ERROR: Status[${status}] ";
+# 	fi
 
-	echo "Done, Listing local then remote..."
-	echo "[${DSTDIR}*.tar]"
-	ls -la ${DSTDIR}/*.tar
+# 	echo "Done, Listing local then remote..."
+# 	echo "[${DSTDIR}*.tar]"
+# 	ls -la ${DSTDIR}/*.tar
 			
-	echo "[${STORDIR}/*.tar]"
-	ls -la ${STORDIR}/*.tar
+# 	echo "[${STORDIR}/*.tar]"
+# 	ls -la ${STORDIR}/*.tar
 
-	eject_drive
+# 	eject_drive
 
-}
+# }
 
 # close_drive () {
 # 	echo "loading disc tray"
@@ -334,20 +328,20 @@ tardisc () {
 
 # }
 
-taragain () {
-	# prompt for ripping another 
-	read -p "TAR another? : " resp
-	echo "Typed:[${resp}]"
-	if [ "${resp}" == "y" -o "${resp}" == "Y" ] ; then
-		echo "tar-ing another"
-		tardiscs;
-	else 
-		echo "exiting"
-		exit 0;
-	fi
-	_paused;
+# taragain () {
+# 	# prompt for ripping another 
+# 	read -p "TAR another? : " resp
+# 	echo "Typed:[${resp}]"
+# 	if [ "${resp}" == "y" -o "${resp}" == "Y" ] ; then
+# 		echo "tar-ing another"
+# 		tardiscs;
+# 	else 
+# 		echo "exiting"
+# 		exit 0;
+# 	fi
+# 	_paused;
 
-}
+# }
 
 # chgRomDrive () {
 # 	echo "listing DRIVEs"
@@ -442,6 +436,7 @@ __menu () {
 	"2") "Enter remote storage dir [ex: /media/media3/cds]"; STORDIR="${__DATA}";;
 	"3") echo "copy data cd to..."       ; __copy_disc ;;
 
+	#TESTED
 	# "4") echo "rip audio cd to..."       ; _abcde_discs ;;
 	"4") echo "rip audio cd to...";
 		_get_user_resp "Artist name: "; local _artistname=${__DATA}
@@ -451,8 +446,11 @@ __menu () {
 		#_abcde_discs ${_drive} ${_destdir} ${_stordir} ${_artistname} ${_volname}
 		;;
 	# "F") _abcde_flac_encode ${DSTDIR} "VOL5" "ART5-VOL5" "mp3"
-	 "F") cd "${DSTDIR}/VOL8"; _abcde_rename_move_flac "${DSTDIR}/VOL8" "ART8-VOL8"
-		;;
+	"F") cd "${DSTDIR}/VOL8"; _abcde_rename_move_flac "${DSTDIR}/VOL8" "ART8-VOL8" ;;
+	
+	"T") _tardisc ${DRIVE} ${DSTDIR} "${DSTDIR}/mnt" "TARNAME" ${STORDIR} ;;
+
+
 
 	"x") echo "Exiting..."             ; exit 0 ;;
 	"g") echo "START!"; _ripdiscs ;;
