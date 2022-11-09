@@ -155,7 +155,7 @@ declare -A _dunzip=(["func"]="_process_unzip"
 ## main controller func - calls _menu
  #
 _runme () {
-	_menu
+	_menu $@
 }
 
 #---------------------------------------------------------------------
@@ -268,27 +268,6 @@ _menu_audio() {
  esac
  _menu_audio
 }
-
-## parse args passed when calling this script
- #
-_parse_audio() {
-  if [ "${1}" == "file" ]; then
-    process_file "$@"
-  elif  [ "${1}" == "folder" ]; then
-    process_folder "$@"
-  elif  [ "${1}" == "audiofile" ]; then
-    _process_audio_file_cli "$@"
-  elif  [ "${1}" == "audiofolder" ]; then
-    _process_audio_folder_cli "$@"
-  elif  [ "${1}" == "imgfile" ]; then
-    _process_img_file_cli "$@"
-  elif  [ "${1}" == "imgfolder" ]; then
-    _process_img_folder_cli "$@"
-  else
-    _menu
-  fi
-}
-
 
 #---------------------------------------------------------------------
 # Read Loops
@@ -426,7 +405,39 @@ _process_tar_create() {
 }
 
 # RUNNER --------------------------------------------------------------------
-_runme
+
+
+# --------------------------------------------------------------------
+# CLI PARSER
+# --------------------------------------------------------------------
+
+## parse args passed when calling this script
+ #
+_parse_audio() {
+  echo "PARAMS: [$@]"
+  if [ "${1}" == "file" ]           ; then        # file
+    process_file "$@"
+  elif  [ "${1}" == "folder" ]      ; then        # folder
+    process_folder "$@"
+  elif  [ "${1}" == "audiofile" ]   ; then        # audiofile
+    _process_audio_file_cli "$@"
+  elif  [ "${1}" == "audiofolder" ] ; then        # audiofolder
+    _process_audio_folder_cli "$@"
+  elif  [ "${1}" == "imgfile" ]     ; then        # image file
+    _process_img_file_cli "$@"
+  elif  [ "${1}" == "imgfolder" ]   ; then        # image folder
+    _process_img_folder_cli "$@"
+  elif [ "${1}" == "webp" ]         ; then         # webp => png
+    echo "processing webp images to pngs"
+    _process_img_folder_by_single_type_webp_png "${2}"
+  else
+    _menu $@
+  fi
+}
+_parse_audio $@
+
+
+
 
 # --------------------------------------------------------------------
 # Test code
