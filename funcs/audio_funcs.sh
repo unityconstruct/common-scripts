@@ -116,3 +116,31 @@ _process_img_file() {
   echo ffmpeg -i "${_file}" $(_trim_ext "${_file}")"${_ext}"
   ffmpeg -i "${_file}" $(_trim_ext "${_file}")"${_ext}"
 }
+
+## find and process webp image files
+ # $1 - path
+ # $2 - FROM extension
+ # $3 - TO extension
+ # $4 - MAX depth (recurse folders)
+_process_img_folder_by_single_type() {
+  echo "PARAMS: [$@]"
+  local _path="${1}"
+  local _fromext="${2}"
+  local _toext="${3}"
+  local _maxdepth="${4}"
+  for _f in $( find "${_path}" -maxdepth ${_maxdepth} -name "*.${_fromext}" ); do 
+      _process_img_file "${_f}" "${_toext}"
+    done;
+}
+
+_process_img_folder_by_single_type_webp_png() {
+  echo "PARAMS: [$@]"
+  local _path="${1}"
+  local _fromext="webp"
+  local _toext="png"
+  local _maxdepth=3
+  _process_img_folder_by_single_type "${_path}" "${_fromext}" "${_toext}" "${_maxdepth}"
+}
+
+
+
